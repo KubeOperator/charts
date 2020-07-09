@@ -1,7 +1,7 @@
 ## GitLab CE image
 ## ref: https://hub.docker.com/r/gitlab/gitlab-ce/tags/
 ##
-image: gitlab/gitlab-ce:9.4.1-ce.0
+image: registry.kubeoperator.io:8082/gitlab/gitlab-ce:9.4.1-ce.0
 
 ## Specify a imagePullPolicy
 ## 'Always' if imageTag is 'latest', else set to 'IfNotPresent'
@@ -92,7 +92,7 @@ persistence:
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 ##
 postgresql:
-  image: "postgres"
+  image: "registry.kubeoperator.io:8082/postgres"
   imageTag: "9.6"
   cpu: 1000m
   memory: 1Gi
@@ -115,7 +115,7 @@ postgresql:
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/redis/README.md
 ##
 redis:
-  image: bitnami/redis:3.2.9-r2
+  image: registry.kubeoperator.io:8082/bitnami/redis:3.2.9-r2
   redisPassword: "gitlab"
 
   resources:
