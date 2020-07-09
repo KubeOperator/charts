@@ -14,3 +14,8 @@ clair:
     timeout: 300s
   updater:
     interval: {{ .Values.clair.updatersInterval }}h
+  notifier:
+    attempts: 3
+    renotifyinterval: 2h
+    http:
+      endpoint: "http://{{ template "harbor.core" . }}/service/notifications/clair"

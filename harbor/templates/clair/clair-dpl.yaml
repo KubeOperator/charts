@@ -1,180 +1,125 @@
-{{ if .Values.clair.enabled }}
-apiVersion: apps/v1
+{{- if .Values.clair.enabled }}
+apiVersion: {{ template "deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ template "harbor.clair" . }}
-  labels:
-{{ include "harbor.labels" . | indent 4 }}
-    component: clair
+  name: {{ include "harbor.clair" . }}
+  labels: {{- include "harbor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clair
 spec:
   replicas: {{ .Values.clair.replicas }}
   selector:
-    matchLabels:
-{{ include "harbor.matchLabels" . | indent 6 }}
-      component: clair
+    matchLabels: {{- include "harbor.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: clair
   template:
     metadata:
-      labels:
-{{ include "harbor.labels" . | indent 8 }}
-        component: clair
+      labels: {{- include "harbor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: clair
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/clair/clair-secret.yaml") . | sha256sum }}
-{{- if and .Values.internalTLS.enabled (eq .Values.internalTLS.certSource "auto") }}
-        checksum/tls: {{ include (print $.Template.BasePath "/internal/auto-tls.yaml") . | sha256sum }}
-{{- else if and .Values.internalTLS.enabled (eq .Values.internalTLS.certSource "manual") }}
-        checksum/tls: {{ include (print $.Template.BasePath "/clair/clair-tls.yaml") . | sha256sum }}
-{{- end }}
-{{- if .Values.clair.podAnnotations }}
-{{ toYaml .Values.clair.podAnnotations | indent 8 }}
-{{- end }}
+        {{- if .Values.clair.podAnnotations }}
+        {{- include "harbor.tplValue" (dict "value" .Values.clair.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
     spec:
-      securityContext:
-        fsGroup: 10000
-{{- if .Values.clair.serviceAccountName }}
-      serviceAccountName: {{ .Values.clair.serviceAccountName }}
-{{- end -}}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+{{- include "harbor.imagePullSecrets" . | indent 6 }}
+      {{- if .Values.clair.affinity }}
+      affinity: {{- include "harbor.tplValue" (dict "value" .Values.clair.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.clair.nodeSelector }}
+      nodeSelector: {{- include "harbor.tplValue" (dict "value" .Values.clair.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.clair.tolerations }}
+      tolerations: {{- include "harbor.tplValue" (dict "value" .Values.clair.tolerations "context" $) | nindent 8 }}
       {{- end }}
       containers:
-      - name: clair
-        image: {{ .Values.clair.clair.image.repository }}:{{ .Values.clair.clair.image.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 6061
-          initialDelaySeconds: 300
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 6061
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        args: ["-log-level", "{{ .Values.logLevel }}"]
-        env:
-        {{- if has "clair" .Values.proxy.components }}
-        - name: HTTP_PROXY
-          value: "{{ .Values.proxy.httpProxy }}"
-        - name: HTTPS_PROXY
-          value: "{{ .Values.proxy.httpsProxy }}"
-        - name: NO_PROXY
-          value: "{{ template "harbor.noProxy" . }}"
-        {{- end }}
-{{- if .Values.clair.clair.resources }}
-        resources:
-{{ toYaml .Values.clair.clair.resources | indent 10 }}
-{{- end }}
-        ports:
-        - containerPort: 6060
-        volumeMounts:
-        - name: config
-          mountPath: /etc/clair/config.yaml
-          subPath: config.yaml
-        {{- if .Values.internalTLS.enabled }}
-        - name: clair-internal-certs
-          mountPath: /harbor_cust_cert/harbor_internal_ca.crt
-          subPath: ca.crt
-        - name: clair-internal-certs
-          mountPath: /etc/harbor/ssl/clair_adapter.crt
-          subPath: tls.crt
-        - name: clair-internal-certs
-          mountPath: /etc/harbor/ssl/clair_adapter.key
-          subPath: tls.key
-        {{- end }}
-        {{- if .Values.caBundleSecretName }}
-{{ include "harbor.caBundleVolumeMount" . | indent 8 }}
-        {{- end }}
-      - name: adapter
-        image: {{ .Values.clair.adapter.image.repository }}:{{ .Values.clair.adapter.image.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
-        livenessProbe:
-          httpGet:
-            path: /probe/healthy
-            scheme: {{ include "harbor.component.scheme" . | upper }}
-            port: {{ template "harbor.clairAdapter.containerPort" . }}
-          initialDelaySeconds: 300
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /probe/ready
-            scheme: {{ include "harbor.component.scheme" . | upper }}
-            port: {{ template "harbor.clairAdapter.containerPort" . }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        env:
-        - name: SCANNER_CLAIR_URL
-          # To avoid a pod cannot reach itself via service IP when the clusters disable hairpin
-          value: "http://127.0.0.1:6060"
-        - name: SCANNER_STORE_REDIS_URL
-          valueFrom:
-              secretKeyRef:
-                name: {{ template "harbor.clair" . }}
-                key: redis
-        - name: SCANNER_CLAIR_DATABASE_URL
-          valueFrom:
-              secretKeyRef:
-                name: {{ template "harbor.clair" . }}
-                key: database
-        {{- if .Values.internalTLS.enabled }}
-        - name: INTERNAL_TLS_ENABLED
-          value: "true"
-        - name: SCANNER_API_SERVER_ADDR
-          value: ":8443"
-        - name: SCANNER_API_SERVER_TLS_KEY
-          value: /etc/harbor/ssl/clair_adapter.key
-        - name: SCANNER_API_SERVER_TLS_CERTIFICATE
-          value: /etc/harbor/ssl/clair_adapter.crt
-        {{- end }}
-        - name: SCANNER_LOG_LEVEL
-          value: "{{ .Values.logLevel }}"
-{{- if .Values.clair.adapter.resources }}
-        resources:
-{{ toYaml .Values.clair.adapter.resources | indent 10 }}
-{{- end }}
-        ports:
-        - containerPort: {{ template "harbor.clairAdapter.containerPort" . }}
-        {{- if or .Values.internalTLS.enabled .Values.caBundleSecretName }}
-        volumeMounts:
-        {{- if .Values.internalTLS.enabled }}
-        - name: clair-internal-certs
-          mountPath: /harbor_cust_cert/harbor_internal_ca.crt
-          subPath: ca.crt
-        - name: clair-internal-certs
-          mountPath: /etc/harbor/ssl/clair_adapter.crt
-          subPath: tls.crt
-        - name: clair-internal-certs
-          mountPath: /etc/harbor/ssl/clair_adapter.key
-          subPath: tls.key
-        {{- end }}
-        {{- if .Values.caBundleSecretName }}
-{{ include "harbor.caBundleVolumeMount" . | indent 8 }}
-        {{- end }}
-        {{- end }}
+        - name: clair
+          image: {{ include "harbor.clairImage" . }}
+          imagePullPolicy: {{ .Values.clairImage.pullPolicy | quote }}
+          {{- if .Values.clair.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 6061
+            initialDelaySeconds: {{ .Values.clair.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.clair.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.clair.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.clair.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.clair.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.clair.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 6061
+            initialDelaySeconds: {{ .Values.clair.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.clair.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.clair.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.clair.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.clair.readinessProbe.failureThreshold }}
+          {{- end }}
+          env:
+            - name: BITNAMI_DEBUG
+              value: {{ ternary "true" "false" .Values.clairImage.debug | quote }}
+            {{- if .Values.clair.httpProxy }}
+            - name: HTTP_PROXY
+              value: {{ .Values.clair.httpProxy }}
+            {{- end }}
+            {{- if .Values.clair.httpsProxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.clair.httpsProxy }}
+            {{- end }}
+            - name: NO_PROXY
+              value: "{{ include "harbor.registry" . }},{{ include "harbor.core" . }}"
+          {{- if .Values.clair.resources }}
+          resources: {{- toYaml .Values.clair.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: 6060
+          volumeMounts:
+            - name: config
+              mountPath: /etc/clair/config.yaml
+              subPath: config.yaml
+        - name: adapter
+          image: {{ include "harbor.clairAdapterImage" . }}
+          imagePullPolicy: {{ .Values.clairAdapterImage.pullPolicy }}
+          {{- if .Values.clair.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /probe/healthy
+              port: 8080
+            initialDelaySeconds: {{ .Values.clair.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.clair.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.clair.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.clair.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.clair.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.clair.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /probe/ready
+              port: 8080
+            initialDelaySeconds: {{ .Values.clair.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.clair.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.clair.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.clair.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.clair.readinessProbe.failureThreshold }}
+          {{- end }}
+          env:
+            - name: BITNAMI_DEBUG
+              value: {{ ternary "true" "false" .Values.clairAdapterImage.debug | quote }}
+            - name: SCANNER_CLAIR_URL
+              # To avoid a pod cannot reach itself via service IP when the clusters disable hairpin
+              value: "http://127.0.0.1:6060"
+            - name: SCANNER_STORE_REDIS_URL
+              value: {{ include "harbor.redisForClairAdapter" . }}
+            - name: SCANNER_CLAIR_DATABASE_URL
+              value: {{ include "harbor.database.clair" . }}
+          {{- if .Values.clair.adapter.resources }}
+          resources: {{ toYaml .Values.clair.adapter.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: 8080
       volumes:
-      - name: config
-        secret:
-          secretName: "{{ template "harbor.clair" . }}"
-      {{- if .Values.internalTLS.enabled }}
-      - name: clair-internal-certs
-        secret:
-          secretName: {{ template "harbor.internalTLS.clair.secretName" . }}
-      {{- end }}
-      {{- if .Values.caBundleSecretName }}
-{{ include "harbor.caBundleVolume" . | indent 6 }}
-      {{- end }}
-    {{- with .Values.clair.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.clair.affinity }}
-      affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.clair.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-{{ end }}
+        - name: config
+          secret:
+            secretName: "{{ template "harbor.clair" . }}"
+{{- end }}
