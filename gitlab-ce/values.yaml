@@ -1,7 +1,7 @@
 ## GitLab CE image
 ## ref: https://hub.docker.com/r/gitlab/gitlab-ce/tags/
 ##
-image: registry.kubeoperator.io:8082/gitlab/gitlab-ce:9.4.1-ce.0
+image: gitlab/gitlab-ce:9.4.1-ce.0
 
 ## Specify a imagePullPolicy
 ## 'Always' if imageTag is 'latest', else set to 'IfNotPresent'
@@ -12,17 +12,17 @@ image: registry.kubeoperator.io:8082/gitlab/gitlab-ce:9.4.1-ce.0
 ## The URL (with protocol) that your users will use to reach the install.
 ## ref: https://docs.gitlab.com/omnibus/settings/configuration.html#configuring-the-external-url-for-gitlab
 ##
-# externalUrl: http://your-domain.com/
+externalUrl: http://gitlab.apps.fit2cloud.com/
 
 ## Change the initial default admin password if set. If not set, you'll be
 ## able to set it when you first visit your install.
 ##
-# gitlabRootPassword: ""
+gitlabRootPassword: fit2cloud
 
 ## For minikube, set this to NodePort, elsewhere use LoadBalancer
 ## ref: http://kubernetes.io/docs/user-guide/services/#publishing-services---service-types
 ##
-serviceType: LoadBalancer
+serviceType: NodePort
 
 ## Ingress configuration options
 ##
@@ -30,12 +30,12 @@ ingress:
   annotations:
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
-  enabled: false
+  enabled: true
   tls:
       # - secretName: gitlab.cluster.local
       #   hosts:
       #     - gitlab.cluster.local
-  url: gitlab.cluster.local
+  url: gitlab.apps.fit2cloud.com
 
 ## Configure external service ports
 ## ref: http://kubernetes.io/docs/user-guide/services/
@@ -92,7 +92,7 @@ persistence:
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 ##
 postgresql:
-  # 9.6 is the newest supported version for the GitLab container
+  image: "postgres"
   imageTag: "9.6"
   cpu: 1000m
   memory: 1Gi
@@ -102,12 +102,20 @@ postgresql:
   postgresDatabase: gitlab
 
   persistence:
+    enabled: true
+    # storageClass:
+    accessMode: ReadWriteOnce
     size: 10Gi
+
+  service:
+    type: ClusterIP
+    port: 5432
 
 ## Configuration values for the redis dependency.
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/redis/README.md
 ##
 redis:
+  image: bitnami/redis:3.2.9-r2
   redisPassword: "gitlab"
 
   resources:
@@ -115,4 +123,7 @@ redis:
       memory: 1Gi
 
   persistence:
+    enabled: true
+    # storageClass:
+    accessMode: ReadWriteOnce
     size: 10Gi
