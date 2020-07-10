@@ -1,0 +1,15 @@
+apiVersion: v1
+appVersion: 7.9.2
+deprecated: true
+description: DEPRECATED SonarQube is an open sourced code quality scanning tool
+home: https://www.sonarqube.org/
+icon: https://www.sonarqube.org/assets/logo-31ad3115b1b4b120f3d1efd63e6b13ac9f1f89437f0cf6881cc4d8b5603a52b4.svg
+keywords:
+- coverage
+- security
+- code
+- quality
+name: sonarqube
+sources:
+- https://github.com/SonarSource/docker-sonarqube
+version: 4.0.1
