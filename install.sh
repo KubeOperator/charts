@@ -44,35 +44,35 @@ function upload_tools() {
   if [[ `pwd` =~ $app ]];then
   case ${app} in
   argo)
-      for image in `ls $BASE_DIR/$app`
+      for image in `ls $BASE_DIR/`
       do
         upload_image
       done
       echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
       ;;
   harbor)
-      for image in `ls $BASE_DIR/$app`
+      for image in `ls $BASE_DIR/`
       do
         upload_image
       done
       echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
       ;;
   gitlab)
-      for image in `ls $BASE_DIR/$app`
+      for image in `ls $BASE_DIR/`
       do
         upload_image
       done
       echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
       ;;
   jenkins)
-      for image in `ls $BASE_DIR/$app`
+      for image in `ls $BASE_DIR/`
       do
         upload_image
       done
       echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
       ;;
   sonarqube)
-      for image in `ls $BASE_DIR/$app`
+      for image in `ls $BASE_DIR/`
       do
         upload_image
       done
@@ -93,7 +93,6 @@ function usage() {
     echo
     echo "Commands: "
     echo "  start 推送Docker镜像"
-}
 
 
 
