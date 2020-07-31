@@ -85,7 +85,7 @@ function upload_tools() {
 
 
 function usage() {
-    echo "Kubeapps 推送Docker"
+    echo "Kubeapps 推送Docker镜像"
     echo
     echo "Usage: "
     echo "  ./kubeappsctl.sh [COMMAND] [ARGS...]"

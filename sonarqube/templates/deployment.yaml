@@ -40,7 +40,7 @@ spec:
       {{- end }}
       initContainers:
         - name: chmod-volume-mounts
-          image: busybox:1.31
+          image: {{ default "busybox:1.31" .Values.plugins.initContainerImage }}
           command:
             - "sh"
             - "-c"
@@ -87,7 +87,7 @@ spec:
       {{- end }}
       {{- if .Values.elasticsearch.configureNode }}
         - name: init-sysctl
-          image: {{ default "busybox:1.31" .Values.plugins.initSysctlContainerImage }}
+          image: {{ default "busybox:1.31" .Values.plugins.initContainerImage }}
           securityContext:
             privileged: true
           command:

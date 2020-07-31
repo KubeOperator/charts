@@ -165,7 +165,7 @@ persistence:
 plugins:
   install: []
   lib: []
-
+  initContainerImage: registry.kubeoperator.io:8082/busybox:1.31
   # initContainerImage: alpine:3.10.3
   # deleteDefaultPlugins: true
   resources: {}
