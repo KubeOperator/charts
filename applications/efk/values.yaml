@@ -1,0 +1,117 @@
+fluentd-elasticsearch:
+  image:
+    repository: quay.io/fluentd_elasticsearch/fluentd
+    tag: v2.8.0
+    pullPolicy: IfNotPresent
+    # pullSecrets:
+    #   - myRegistrKeySecretName
+
+  hostLogDir:
+    varLog: /var/log
+    dockerContainers: /var/lib/docker/containers
+    libSystemdDir: /usr/lib64
+
+  elasticsearch:
+    auth:
+      enabled: false
+      user: "yourUser"
+      password: "yourPass"
+    bufferChunkLimit: "2M"
+    bufferQueueLimit: 8
+    host: "elasticsearch-master"
+    logstashPrefix: "logstash"
+    port: 9200
+    path: ""
+    scheme: "http"
+    sslVerify: true
+    sslVersion: "TLSv1_2"
+    typeName: "_doc"
+    logLevel: "info"
+    logEs400Reason: false
+
+elasticsearch:
+  clusterName: "elasticsearch"
+  nodeGroup: "master"
+  masterService: ""
+
+  roles:
+    master: "true"
+    ingest: "true"
+    data: "true"
+
+  replicas: 3
+  minimumMasterNodes: 2
+
+  image: "docker.elastic.co/elasticsearch/elasticsearch"
+  imageTag: "7.6.2"
+  imagePullPolicy: "IfNotPresent"
+
+  esJavaOpts: "-Xmx1g -Xms1g"
+
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  volumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    storageClassName: vsphere-sc
+    resources:
+      requests:
+        storage: 30Gi
+
+  persistence:
+    enabled: true
+    annotations: {}
+
+  service:
+    labels: {}
+    labelsHeadless: {}
+    type: ClusterIP
+    nodePort: ""
+    annotations: {}
+    httpPortName: http
+    transportPortName: transport
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+
+kibana:
+  elasticsearchURL: "" # "http://elasticsearch-master:9200"
+  elasticsearchHosts: "http://elasticsearch-master:9200"
+
+  replicas: 1
+
+  image: "docker.elastic.co/kibana/kibana"
+  imageTag: "7.6.2"
+  imagePullPolicy: "IfNotPresent"
+
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  protocol: http
+  healthCheckPath: "/app/kibana"
+  httpPort: 5601
+
+  service:
+    type: ClusterIP
+    port: 5601
+    nodePort: ""
+    labels: {}
+    annotations: {}
+      # cloud.google.com/load-balancer-type: "Internal"
+      # service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+      # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      # service.beta.kubernetes.io/openstack-internal-load-balancer: "true"
+      # service.beta.kubernetes.io/cce-load-balancer-internal-vpc: "true"
+    loadBalancerSourceRanges: []
+      # 0.0.0.0/0
+
+  imagePullSecrets: []
