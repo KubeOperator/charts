@@ -47,7 +47,7 @@ $ helm install registry --namespace kube-operator \
 applications/docker-registry
 
 ### prometheus
-### arm64: kube-state-metrics.image.repository=172.16.10.64:8082/kubeoperator/kube-state-metrics
+### arm64: kube-state-metrics.image.repository=172.16.10.64:8082/carlosedp/kube-state-metrics
 $ helm install prometheus --namespace kube-operator \
 --set alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
