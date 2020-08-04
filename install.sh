@@ -37,7 +37,8 @@ function upload_image() {
     if [[ ${orign_image_name} =~ "quay.io" ]]; then
       image_name=`echo $orign_image_name|sed -r 's/quay.io\///g'`
     else
-      image_name=`echo $image|sed -r 's/.tar//g'`
+      image_name=`echo $orign_image_name`
+      #image_name=`echo $image|sed -r 's/.tar//g'`
     fi
     docker tag $orign_image_name $registry_host/$image_name
     docker push $registry_host/$image_name
