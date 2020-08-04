@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-save_dirname=/artifacts/ko-3.0/data/charts-kubeapps/images
+# 离线文件存放目录
+# save_dirname=/artifacts/ko-3.0/data/charts-kubeapps/images
 source ./image_list
 
 app_list=(argo
