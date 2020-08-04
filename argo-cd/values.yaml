@@ -172,7 +172,7 @@ dex:
   name: dex-server
 
   image:
-    repository: quay.io/dexidp/dex
+    repository: registry.kubeoperator.io:8082/dexidp/dex
     tag: v2.22.0
     imagePullPolicy: IfNotPresent
   initImage:
@@ -242,7 +242,7 @@ redis:
   name: redis
 
   image:
-    repository: redis
+    repository: registry.kubeoperator.io:8082/redis
     tag: 5.0.8
     imagePullPolicy: IfNotPresent
 
