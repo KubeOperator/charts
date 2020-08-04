@@ -1,0 +1,7 @@
+apiVersion: v1
+appVersion: 7.6.2
+description: A Helm chart for efk
+home: https://www.kubeoperator.io
+icon: https://raw.githubusercontent.com/KubeOperator/KubeOperator/master/kubeoperator-logo.svg
+name: efk
+version: 1.0.0
