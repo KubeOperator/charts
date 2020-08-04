@@ -19,7 +19,9 @@ function download_image() {
   echo  "保存至  $save_dirname/$app/images/${file_name}.tar"
   cp -rp install.sh $save_dirname/$app
   docker save -o $save_dirname/$app/images/${file_name}.tar ${image}
-  tar zcvf ${app}.tar.gz $save_dirname/$app
+  cd $save_dirname/
+  tar zcvf ${app}.tar.gz $app
+  cd -
   mv ${app}.tar.gz $save_dirname/
 }
 
