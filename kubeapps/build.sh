@@ -16,7 +16,8 @@ function download_image() {
   file_name=`echo ${image}|sed -r 's/.*\///'`
   echo "下载 $image"
   docker pull $image
-  echo  "保存至  $save_dirname/$app/${file_name}.tar"
+  echo  "保存至  $save_dirname/$app/images/${file_name}.tar"
+  cp -rp install.sh $save_dirname/$app
   docker save -o $save_dirname/$app/images/${file_name}.tar ${image}
 }
 
