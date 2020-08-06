@@ -7,7 +7,7 @@ docker.io/redis:5.0.8
 )
 
 gitlab=(
-bitnami/postgresql:9.6
+postgres:11-alpine
 bitnami/redis:3.2.9-r2
 gitlab/gitlab-ce:9.4.1-ce.0
 )
