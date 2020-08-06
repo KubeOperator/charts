@@ -34,10 +34,8 @@ bitnami/jenkins:2.222.1-debian-10-r12
 
 sonarqube=(
 docker.io/dduportal/bats:0.4.0
-kubeoperator/sonarqube:7.9.2-community
+sonarqube:7.9.2-community
 busybox:1.31
-busybox:1.31
-kubeoperator/sonarqube:7.9.2-community
 bitnami/minideb:stretch
 bitnami/postgresql:11.6.0-debian-10-r0
 )
