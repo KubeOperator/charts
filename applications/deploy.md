@@ -22,7 +22,9 @@ $ helm install kubeapps --namespace kube-operator \
 --set useHelm3=true \
 --set apprepository.initialRepos[0].name=kubeoperator \
 --set apprepository.initialRepos[0].url=http://172.16.10.64:8081/repository/kubeapps/ \
---set postgresql.enabled=true \s
+--set postgresql.enabled=true \
+--set postgresql.image.repository=postgres \
+--set postgresql.image.tag=11-alpine \
 --set postgresql.persistence.enabled=true \
 --set postgresql.persistence.size=8Gi \
 applications/kubeapps
