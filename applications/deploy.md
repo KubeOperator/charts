@@ -34,6 +34,7 @@ $ helm install chartmuseum --namespace kube-operator \
 --set service.type=NodePort \
 --set env.open.DISABLE_API=false \
 --set persistence.enabled=true \
+--set persistence.size=8Gi \
 --set persistence.storageClass=nfs-sc \
 applications/chartmuseum
 
@@ -43,6 +44,7 @@ $ helm install registry --namespace kube-operator \
 --set image.tag=2.7.1 \
 --set service.type=NodePort \
 --set persistence.enabled=true \
+--set persistence.size=10Gi \
 --set persistence.storageClass=nfs-sc \
 applications/docker-registry
 
