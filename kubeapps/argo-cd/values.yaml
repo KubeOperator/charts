@@ -297,6 +297,20 @@ redis-ha:
     enabled: true
   persistentVolume:
     enabled: false
+    ## redis-ha data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    annotations: {}
+    # reclaimPolicy per https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming
+    reclaimPolicy: ""
   redis:
     masterGroupName: argocd
     config:

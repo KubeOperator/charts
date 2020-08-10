@@ -6,9 +6,9 @@ replicaCount: 1
 global:
   postgresql: {}
   imageRegistry: registry.kubeoperator.io:8082
-  #   #   imagePullSecrets:
-  #   #     - myRegistryKeySecretName
-  #storageClass: nfs-storage-class
+  # imagePullSecrets:
+  # - myRegistryKeySecretName
+  # storageClass: nfs-storage-class
 
  # This will use the default deployment strategy unless it is overriden
 deploymentStrategy: {}
@@ -147,7 +147,7 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   ##
-  #storageClass:
+  # storageClass:
   accessMode: ReadWriteOnce
   size: 10Gi
 
@@ -211,6 +211,32 @@ postgresql:
   # Specify the TCP port that PostgreSQL should use
   service:
     port: 5432
+  ## PostgreSQL data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  persistence:
+    enabled: false
+    ## A manually managed Persistent Volume and Claim
+    ## If defined, PVC must be created manually before volume will be bound
+    ## The value is evaluated as a template, so, for example, the name can depend on .Release or .Chart
+    ##
+    # existingClaim:
+    ## The path the volume will be mounted at, useful when using different
+    ## PostgreSQL images.
+    ##
+    mountPath: /bitnami/postgresql
+    ## The subdirectory of the volume to mount to, useful in dev environments
+    ## and one PV for multiple services.
+    ##
+    subPath: ""
+    # storageClass: "-"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
 
 ## Configuration values for the mysql dependency
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/mysql/README.md
@@ -232,6 +258,19 @@ mysql:
   # Specify the TCP port that mySQL should use
   service:
     port: 3306
+  ## Persist data to a persistent volume
+  persistence:
+    enabled: false
+    ## database data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessMode: ReadWriteOnce
+    size: 8Gi
 #
 # Additional labels to add to the pods:
 # podLabels:
