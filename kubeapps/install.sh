@@ -8,7 +8,7 @@ BASE_DIR=$(
 
 action=$1
 # 应用列表
-app_list=(argo harbor gitlab jenkins sonarqube weave-scope)
+app_list=(argo harbor gitlab jenkins sonarqube weave_scope)
 # 默认镜像仓库地址，也是KubeOperator部署机地址
 registry_host=registry.kubeoperator.io:8083
 
@@ -85,7 +85,7 @@ function upload_tools() {
         upload_image
       done
       ;;
-  weave-scope)
+  weave_scope)
       echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
       for image in `ls $BASE_DIR/images`
       do

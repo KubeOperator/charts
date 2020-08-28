@@ -40,6 +40,6 @@ bitnami/minideb:stretch
 bitnami/postgresql:11.6.0-debian-10-r0
 )
 
-weave-scope=(
+weave_scope=(
 weaveworks/scope:1.12.0
 )

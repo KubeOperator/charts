@@ -9,7 +9,7 @@ harbor
 gitlab
 jenkins
 sonarqube
-weave-scope)
+weave_scope)
 
 
 function download_image() {
@@ -65,8 +65,8 @@ sonarqube)
     done
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
-weave-scope)
-    for image in ${weave-scope[@]}
+weave_scope)
+    for image in ${weave_scope[@]}
     do
       download_image
     done
