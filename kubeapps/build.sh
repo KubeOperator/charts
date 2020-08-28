@@ -8,7 +8,8 @@ app_list=(argo
 harbor
 gitlab
 jenkins
-sonarqube)
+sonarqube
+weave-scope)
 
 
 function download_image() {
@@ -59,6 +60,13 @@ jenkins)
     ;;
 sonarqube)
     for image in ${sonarqube[@]}
+    do
+      download_image
+    done
+    echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    ;;
+weave-scope)
+    for image in ${weave-scope[@]}
     do
       download_image
     done

@@ -39,3 +39,7 @@ busybox:1.31
 bitnami/minideb:stretch
 bitnami/postgresql:11.6.0-debian-10-r0
 )
+
+weave-scope=(
+weaveworks/scope:1.12.0
+)
