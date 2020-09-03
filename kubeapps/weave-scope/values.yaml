@@ -3,7 +3,7 @@
 global:
   # global.image: the image that will be used for this release
   image:
-    repository: weaveworks/scope
+    repository: registry.kubeoperator.io:8082/weaveworks/scope
     tag: 1.12.0
     # global.image.pullPolicy: must be Always, IfNotPresent, or Never
     pullPolicy: "IfNotPresent"
