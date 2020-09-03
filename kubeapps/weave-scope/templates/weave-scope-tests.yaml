@@ -9,7 +9,7 @@ metadata:
 spec:
   initContainers:
     - name: "test-framework"
-      image: "dduportal/bats:0.4.0"
+      image: "{{ .Values.global.dduportal.image.repository }}:{{ .Values.global.dduportal.image.tag }}"
       command:
       - "bash"
       - "-c"
@@ -22,7 +22,7 @@ spec:
         name: tools
   containers:
     - name: {{ .Release.Name }}-ui-test
-      image: dduportal/bats:0.4.0
+      image: "{{ .Values.global.dduportal.image.repository }}:{{ .Values.global.dduportal.image.tag }}"
       command: ["/tools/bats/bats", "-t", "/tests/run.sh"]
       volumeMounts:
       - mountPath: /tests
