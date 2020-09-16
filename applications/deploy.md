@@ -23,6 +23,8 @@ $ helm install kubeapps --namespace kube-operator \
 --set apprepository.initialRepos[0].name=kubeoperator \
 --set apprepository.initialRepos[0].url=http://172.16.10.64:8081/repository/kubeapps/ \
 --set postgresql.enabled=true \
+--set postgresql.master.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
+--set postgresql.slave.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set postgresql.image.repository=postgres \
 --set postgresql.image.tag=11-alpine \
 --set postgresql.persistence.enabled=true \
@@ -35,6 +37,7 @@ $ helm install chartmuseum --namespace kube-operator \
 --set image.tag=v0.12.0 \
 --set service.type=NodePort \
 --set env.open.DISABLE_API=false \
+--set nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set persistence.enabled=true \
 --set persistence.size=8Gi \
 --set persistence.storageClass=nfs-sc \
@@ -44,6 +47,7 @@ applications/chartmuseum
 $ helm install registry --namespace kube-operator \
 --set image.repository=172.16.10.64:8082/registry \
 --set image.tag=2.7.1 \
+--set nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set service.type=NodePort \
 --set persistence.enabled=true \
 --set persistence.size=10Gi \
@@ -69,6 +73,7 @@ $ helm install prometheus --namespace kube-operator \
 --set server.service.type=NodePort \
 --set server.image.repository=172.16.10.64:8082/prom/prometheus \
 --set server.image.tag=v2.18.1 \
+--set server.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set server.persistentVolume.enabled=true \
 --set server.persistentVolume.size=8Gi \
 --set server.persistentVolume.storageClass=nfs-sc \
