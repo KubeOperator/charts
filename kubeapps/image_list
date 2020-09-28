@@ -43,3 +43,8 @@ bitnami/postgresql:11.6.0-debian-10-r0
 weave_scope=(
 weaveworks/scope:1.12.0
 )
+
+redmine=(
+bitnami/redmine:4.1.1-debian-10-r133
+bitnami/mariadb:10.3.24-debian-10-r17
+)
