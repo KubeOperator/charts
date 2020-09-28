@@ -6,6 +6,7 @@ BASE_DIR=$(
     pwd
 )
 
+set -e
 action=$1
 # 应用列表
 app_list=(argo harbor gitlab jenkins sonarqube weave_scope redmine)
