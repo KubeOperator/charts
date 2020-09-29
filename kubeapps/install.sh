@@ -6,9 +6,10 @@ BASE_DIR=$(
     pwd
 )
 
+set -e
 action=$1
 # 应用列表
-app_list=(argo harbor gitlab jenkins sonarqube weave_scope)
+app_list=(argo harbor gitlab jenkins sonarqube weave_scope redmine)
 # 默认镜像仓库地址，也是KubeOperator部署机地址
 registry_host=registry.kubeoperator.io:8083
 
@@ -17,7 +18,7 @@ function set_registry() {
     echo ">>> 配置registry"
     use_external_registry="n"
     read -p  "是否使用外部Docker Image Registry y/n: " use_external_registry
-    if [[ "${use_external_registry}" == "y" ]]; then
+    if [[ "${use_external_registry}" == "y" ]] || [[ "${use_external_registry}" == "Y" ]] ; then
         read -p  " 请输入registry的域名: " registry_host
         read -p  " 请输入registry的用户名: " registry_user
         read -p  " 请输入registry的密码: " registry_pass
@@ -45,52 +46,38 @@ function upload_image() {
     docker rmi $registry_host/$image_name
 }
 
+function load_image() {
+     echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
+     for image in $BASE_DIR/images/*.tar
+     do
+      upload_image
+     done
+}
 function upload_tools() {
   for app in ${app_list[@]}
   do
   if [[ `pwd` =~ $app ]];then
   case ${app} in
   argo)
-      echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
-      for image in `ls $BASE_DIR/images`
-      do
-        upload_image
-      done
+      load_image
       ;;
   harbor)
-      echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
-      for image in `ls $BASE_DIR/images`
-      do
-        upload_image
-      done
+      load_image
       ;;
   gitlab)
-      echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
-      for image in `ls $BASE_DIR/images`
-      do
-        upload_image
-      done
+      load_image
       ;;
   jenkins)
-      echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
-      for image in `ls $BASE_DIR/images`
-      do
-        upload_image
-      done
+      load_image
       ;;
   sonarqube)
-      echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
-      for image in `ls $BASE_DIR/images`
-      do
-        upload_image
-      done
+      load_image
       ;;
   weave_scope)
-      echo "+++++++++++++++++++++++++++++++++++$app+++++++++++++++++++++++++++++++++++"
-      for image in `ls $BASE_DIR/images`
-      do
-        upload_image
-      done
+      load_image
+      ;;
+  redmine)
+      load_image
       ;;
   esac
   fi
