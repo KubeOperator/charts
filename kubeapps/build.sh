@@ -9,7 +9,8 @@ harbor
 gitlab
 jenkins
 sonarqube
-weave_scope)
+weave_scope
+redmine)
 
 
 function download_image() {
@@ -67,6 +68,13 @@ sonarqube)
     ;;
 weave_scope)
     for image in ${weave_scope[@]}
+    do
+      download_image
+    done
+    echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    ;;
+redmine)
+    for image in ${redmine[@]}
     do
       download_image
     done
