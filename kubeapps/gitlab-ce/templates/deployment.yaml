@@ -18,6 +18,7 @@ spec:
       labels:
         app: {{ template "gitlab-ce.fullname" . }}
     spec:
+      serviceAccountName: {{ template "gitlab-ce.fullname" . }}
       containers:
       - name: {{ template "gitlab-ce.fullname" . }}
         image: {{ .Values.image }}
