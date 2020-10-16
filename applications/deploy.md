@@ -82,10 +82,11 @@ $ helm install prometheus --namespace kube-operator \
 applications/prometheus
 
 ### efk 不支持arm64架构
-$ helm install efk --namespace kube-operator \
+$ helm install logging --namespace kube-operator \
 --set fluentd-elasticsearch.image.repository=172.16.10.64:8082/fluentd_elasticsearch/fluentd \
 --set fluentd-elasticsearch.image.tag=v2.8.0 \
---set elasticsearch.replicas=1 \
+--set fluentd-elasticsearch.elasticsearch.logstashPrefix=logstash \
+--set elasticsearch.replicas=2 \
 --set elasticsearch.image=172.16.10.64:8082/elasticsearch/elasticsearch \
 --set elasticsearch.imageTag=7.6.2 \
 --set elasticsearch.esJavaOpts="-Xmx1g -Xms1g" \
@@ -93,7 +94,6 @@ $ helm install efk --namespace kube-operator \
 --set elasticsearch.volumeClaimTemplate.storageClassName=nfs-sc \
 --set elasticsearch.volumeClaimTemplate.resources.requests.storage=100Gi \
 --set elasticsearch.service.type=NodePort \
---set kibana.image=172.16.10.64:8082/kibana/kibana \
---set kibana.imageTag=7.6.2 \
---set kibana.service.type=NodePort \
+--set elasticsearch.ingress.enabled=true \
+--set elasticsearch.ingress.hosts[0]=elasticsearch.apps.ko.com \
 applications/efk
