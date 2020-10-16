@@ -96,4 +96,4 @@ $ helm install logging --namespace kube-operator \
 --set elasticsearch.service.type=NodePort \
 --set elasticsearch.ingress.enabled=true \
 --set elasticsearch.ingress.hosts[0]=elasticsearch.apps.ko.com \
-applications/efk
+applications/logging
