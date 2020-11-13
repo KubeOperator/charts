@@ -96,3 +96,16 @@ $ helm install logging --namespace kube-operator \
 --set elasticsearch.service.type=NodePort \
 applications/logging
 
+### loki-stack
+$ helm install loki --namespace kube-operator \
+--set loki.image.repository=172.16.10.64:8082/grafana/loki \
+--set loki.image.tag=2.0.0 \
+--set loki.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
+--set loki.persistence.enabled=true \
+--set loki.persistence.size=8Gi \
+--set loki.persistence.storageClassName=nfs-sc \
+--set loki.service.type=NodePort \
+--set promtail.image.repository=172.16.10.64:8082/grafana/promtail \
+--set promtail.image.tag=2.0.0 \
+--set promtail.dockerPath="/data/docker" \
+applications/loki-stack
