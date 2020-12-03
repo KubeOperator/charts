@@ -1,0 +1,9 @@
+apiVersion: v1
+appVersion: v2.0.5.1
+description: Kuboard is a microservice management interface based on Kubernetes
+home: https://github.com/eip-work/kuboard-press
+keywords:
+- kuboard
+- dashboard
+name: kuboard
+version: 0.1.0
