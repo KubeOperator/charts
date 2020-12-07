@@ -35,7 +35,7 @@ modelBasePath: "/serving/inception-export"
 
 persistence:
   enabled: false
-  # storageClass: ""
+  storageClass: ""
   size: 10Gi
   accessMode: ReadWriteOnce
  # matchLabels: {}
