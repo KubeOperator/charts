@@ -11,7 +11,9 @@ jenkins
 sonarqube
 weave_scope
 redmine
-kuboard)
+kuboard
+tensorflow-notebook
+tensorflow-serving)
 
 
 function download_image() {
@@ -83,6 +85,20 @@ redmine)
     ;;
 kuboard)
     for image in ${kuboard[@]}
+    do
+      download_image
+    done
+    echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    ;;
+tensorflow-notebook)
+    for image in ${tensorflow-notebook[@]}
+    do
+      download_image
+    done
+    echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    ;;
+tensorflow-serving)
+    for image in ${tensorflow-serving[@]}
     do
       download_image
     done

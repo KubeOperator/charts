@@ -52,3 +52,11 @@ bitnami/mariadb:10.3.24-debian-10-r17
 kuboard=(
 eipwork/kuboard:v2.0.5.1
 )
+
+tensorflow-notebook=(
+tensorflow/tensorflow:1.6.0-devel
+)
+
+tensorflow-serving=(
+cheyang/tf-model-server:1.4
+)
