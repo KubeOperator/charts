@@ -4,7 +4,9 @@
 # save_dirname=/artifacts/ko-3.0/data/charts-kubeapps/images
 source ./image_list
 
-app_list=(argo
+app_list=(
+argo-v1.6.1
+argo-v1.7.4
 harbor
 gitlab
 jenkins
@@ -13,7 +15,8 @@ weave_scope
 redmine
 kuboard
 tensorflow-notebook
-tensorflow-serving)
+tensorflow-serving
+)
 
 
 function download_image() {
@@ -21,7 +24,6 @@ function download_image() {
     echo "下载 $image"
     docker pull $image
     echo  "保存至  $save_dirname/$app/images/${file_name}.tar"
-    cp -rp ../kubeapps/install.sh $save_dirname/$app
     docker save -o $save_dirname/$app/images/${file_name}.tar ${image}
 }
 
@@ -31,16 +33,31 @@ function pre_download_image() {
 
 function post_download_image() {
     cd $save_dirname/
+    echo "$app 拷贝 install.sh 文件"
+    cp -rp ../kubeapps/install.sh ./$app
+    echo "压缩文件 $app.tar.gz"
     tar zcvf ${app}.tar.gz $app
 }
 
 for app in ${app_list[@]}
 do
 case ${app} in
-argo)
+argo-v1.6.1)
     pre_download_image
 
-    for image in ${argo[@]}
+    for image in ${argo-v1.6.1[@]}
+    do
+        download_image
+    done
+
+    post_download_image
+
+    echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    ;;
+argo-v.1.7.4)
+    pre_download_image
+
+    for image in ${argo-v.1.7.4[@]}
     do
         download_image
     done

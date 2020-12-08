@@ -1,6 +1,12 @@
 # 所有应用的 docker image
 
-argo=(
+argo-v1.6.1=(
+argoproj/argocd:v1.6.1
+quay.io/dexidp/dex:v2.22.0
+docker.io/redis:5.0.8
+)
+
+argo-v1.7.4=(
 argoproj/argocd:v1.7.4
 quay.io/dexidp/dex:v2.22.0
 docker.io/redis:5.0.8 
