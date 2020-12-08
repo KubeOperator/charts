@@ -9,7 +9,7 @@ BASE_DIR=$(
 set -e
 action=$1
 # 应用列表
-app_list=(argo harbor gitlab jenkins sonarqube weave_scope redmine)
+app_list=(argo harbor gitlab jenkins sonarqube weave_scope redmine kuboard tensorflow_notebook tensorflow_serving)
 # 默认镜像仓库地址，也是KubeOperator部署机地址
 registry_host=registry.kubeoperator.io:8083
 
@@ -77,6 +77,15 @@ function upload_tools() {
       load_image
       ;;
   redmine)
+      load_image
+      ;;
+  kuboard)
+      load_image
+      ;;
+  tensorflow_notebook)
+      load_image
+      ;;
+  tensorflow_serving)
       load_image
       ;;
   esac
