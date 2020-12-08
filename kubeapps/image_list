@@ -54,10 +54,10 @@ kuboard=(
 eipwork/kuboard:v2.0.5.1
 )
 
-tensorflow-notebook=(
+tensorflow_notebook=(
 tensorflow/tensorflow:1.6.0-devel
 )
 
-tensorflow-serving=(
+tensorflow_serving=(
 cheyang/tf-model-server:1.4
 )

@@ -13,8 +13,8 @@ sonarqube
 weave_scope
 redmine
 kuboard
-tensorflow-notebook
-tensorflow-serving
+tensorflow_notebook
+tensorflow_serving
 )
 
 
@@ -137,10 +137,10 @@ kuboard)
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
-tensorflow-notebook)
+tensorflow_notebook)
     pre_download_image
 
-    for image in ${tensorflow-notebook[@]}
+    for image in ${tensorflow_notebook[@]}
     do
         download_image
     done
@@ -149,10 +149,10 @@ tensorflow-notebook)
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
-tensorflow-serving)
+tensorflow_serving)
     pre_download_image
 
-    for image in ${tensorflow-serving[@]}
+    for image in ${tensorflow_serving[@]}
     do
         download_image
     done
