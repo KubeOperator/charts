@@ -21,15 +21,15 @@ function download_image() {
   echo "下载 $image"
   docker pull $image
   echo  "保存至  $save_dirname/$app/images/${file_name}.tar"
-  cp -rp install.sh $save_dirname/$app
+  cp -rp ${cwd}/kubeapps/install.sh $save_dirname/$app
   docker save -o $save_dirname/$app/images/${file_name}.tar ${image}
 }
 
-function pre_image_download() {
+function pre_download_image() {
   mkdir -p $save_dirname/$app/images
 }
 
-function post_image_download() {
+function post_download_image() {
   cd $save_dirname/
   tar zcvf ${app}.tar.gz $app
 }
@@ -38,122 +38,122 @@ for app in ${app_list[@]}
 do
 case ${app} in
 argo)
-    pre_image_download
+    pre_download_image
 
     for image in ${argo[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 harbor)
-    pre_image_download
+    pre_download_image
 
     for image in ${harbor[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 gitlab)
-    pre_image_download
+    pre_download_image
 
     for image in ${gitlab[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 jenkins)
-    pre_image_download
+    pre_download_image
 
     for image in ${jenkins[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 sonarqube)
-    pre_image_download
+    pre_download_image
 
     for image in ${sonarqube[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 weave_scope)
-    pre_image_download
+    pre_download_image
 
     for image in ${weave_scope[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 redmine)
-    pre_image_download
+    pre_download_image
 
     for image in ${redmine[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 kuboard)
-    pre_image_download
+    pre_download_image
 
     for image in ${kuboard[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 tensorflow-notebook)
-    pre_image_download
+    pre_download_image
 
     for image in ${tensorflow-notebook[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
 tensorflow-serving)
-    pre_image_download
+    pre_download_image
 
     for image in ${tensorflow-serving[@]}
     do
       download_image
     done
 
-    post_image_download
+    post_download_image
 
     echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     ;;
