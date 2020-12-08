@@ -5,8 +5,7 @@
 source ./image_list
 
 app_list=(
-argo-v1.6.1
-argo-v1.7.4
+argo
 harbor
 gitlab
 jenkins
@@ -42,22 +41,10 @@ function post_download_image() {
 for app in ${app_list[@]}
 do
 case ${app} in
-argo-v1.6.1)
+argo)
     pre_download_image
 
-    for image in ${argo-v1.6.1[@]}
-    do
-        download_image
-    done
-
-    post_download_image
-
-    echo "+++++++++++++++++++++++++++++++++++$app++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    ;;
-argo-v.1.7.4)
-    pre_download_image
-
-    for image in ${argo-v.1.7.4[@]}
+    for image in ${argo[@]}
     do
         download_image
     done
