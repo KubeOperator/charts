@@ -17,21 +17,22 @@ tensorflow-serving)
 
 
 function download_image() {
-  file_name=`echo ${image}|sed -r 's/.*\///'`
-  echo "下载 $image"
-  docker pull $image
-  echo  "保存至  $save_dirname/$app/images/${file_name}.tar"
-  cp -rp ${cwd}/kubeapps/install.sh $save_dirname/$app
-  docker save -o $save_dirname/$app/images/${file_name}.tar ${image}
+    file_name=`echo ${image}|sed -r 's/.*\///'`
+    echo "下载 $image"
+    docker pull $image
+    echo  "保存至  $save_dirname/$app/images/${file_name}.tar"
+    cp -rp install.sh $save_dirname/$app
+    docker save -o $save_dirname/$app/images/${file_name}.tar ${image}
 }
 
 function pre_download_image() {
-  mkdir -p $save_dirname/$app/images
+    mkdir -p $save_dirname/$app/images
 }
 
 function post_download_image() {
-  cd $save_dirname/
-  tar zcvf ${app}.tar.gz $app
+    cd $save_dirname/
+    tar zcvf ${app}.tar.gz $app
+    cd ..
 }
 
 for app in ${app_list[@]}
@@ -42,7 +43,7 @@ argo)
 
     for image in ${argo[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -54,7 +55,7 @@ harbor)
 
     for image in ${harbor[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -66,7 +67,7 @@ gitlab)
 
     for image in ${gitlab[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -78,7 +79,7 @@ jenkins)
 
     for image in ${jenkins[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -90,7 +91,7 @@ sonarqube)
 
     for image in ${sonarqube[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -102,7 +103,7 @@ weave_scope)
 
     for image in ${weave_scope[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -114,7 +115,7 @@ redmine)
 
     for image in ${redmine[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -126,7 +127,7 @@ kuboard)
 
     for image in ${kuboard[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -138,7 +139,7 @@ tensorflow-notebook)
 
     for image in ${tensorflow-notebook[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
@@ -150,7 +151,7 @@ tensorflow-serving)
 
     for image in ${tensorflow-serving[@]}
     do
-      download_image
+        download_image
     done
 
     post_download_image
