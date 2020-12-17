@@ -109,3 +109,29 @@ $ helm install loki --namespace kube-operator \
 --set promtail.image.tag=2.0.0 \
 --set promtail.dockerPath="/data/docker" \
 applications/loki-stack
+
+
+### grafana
+$ helm install grafana --namespace kube-operator \
+--set image.repository=172.16.10.181:8082/grafana/grafana \
+--set image.tag=7.3.3 \
+--set service.type=NodePort \
+--set nodeSelector."kubernetes\.io/hostname"=wanghe-master-1 \
+--set persistence.enabled=true \
+--set persistence.storageClassName=nfs-sc \
+--set persistence.size=10Gi \
+--set initChownData.enabled=true \
+--set initChownData.image.repository=172.16.10.181:8082/busybox \
+--set initChownData.image.tag=1.31.1 \
+--set adminPassword=1qaz@WSX \
+--set datasources."datasources\.yaml".apiVersion=1 \
+--set datasources."datasources\.yaml".datasources[0].name=MYDS_Prometheus \
+--set datasources."datasources\.yaml".datasources[0].type=prometheus \
+--set datasources."datasources\.yaml".datasources[0].url=http://prometheus-server \
+--set datasources."datasources\.yaml".datasources[0].access=proxy \
+--set datasources."datasources\.yaml".datasources[0].isDefault=true \
+--set datasources."datasources\.yaml".datasources[1].name=Loki \
+--set datasources."datasources\.yaml".datasources[1].type=loki \
+--set datasources."datasources\.yaml".datasources[1].url=http://loki:3100 \
+--set datasources."datasources\.yaml".datasources[1].access=proxy \
+applications/grafana
