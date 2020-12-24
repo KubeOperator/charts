@@ -139,7 +139,7 @@ applications/grafana
 ### istio-base
 helm install istio-base --namespace istio-system \
 --set global.istiod.enableAnalysis=true
-applications/base
+applications/istio-base
 
 ### istio-pilot
 helm install istio-pilot --namespace istio-system \
@@ -153,7 +153,7 @@ applications/istio-discovery
 
 ### istio-ingress
 helm install istio-ingress --namespace istio-system \
---set global.proxy.image=172.16.10.64:8082/istio/istio/proxyv2:1.8.0 \
+--set global.proxy.image=172.16.10.64:8082/istio/proxyv2:1.8.0 \
 --set gateways.istio-ingressgateway.resources.limits.cpu=2000m \
 --set gateways.istio-ingressgateway.resources.limits.memory=1024Mi \
 --set gateways.istio-ingressgateway.resources.requests.cpu=100m \
@@ -163,7 +163,7 @@ applications/istio-ingress
 
 ### istio-egress
 helm install istio-egress --namespace istio-system \
---set global.proxy.image=172.16.10.64:8082/istio/istio/proxyv2:1.8.0 \
+--set global.proxy.image=172.16.10.64:8082/istio/proxyv2:1.8.0 \
 --set gateways.istio-egressgateway.resources.limits.cpu=2000m \
 --set gateways.istio-egressgateway.resources.limits.memory=1024Mi \
 --set gateways.istio-egressgateway.resources.requests.cpu=100m \
