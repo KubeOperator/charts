@@ -143,6 +143,7 @@ applications/base
 
 ### istio-pilot
 helm install istio-pilot --namespace istio-system \
+--set pilot.image=172.16.10.64:8082/istio/pilot:1.8.0 \
 --set pilot.resources.limits.cpu=500m \
 --set pilot.resources.limits.memory=2048Mi \
 --set pilot.resources.requests.cpu=500m \
@@ -152,6 +153,7 @@ applications/istio-discovery
 
 ### istio-ingress
 helm install istio-ingress --namespace istio-system \
+--set global.proxy.image=172.16.10.64:8082/istio/istio/proxyv2:1.8.0 \
 --set gateways.istio-ingressgateway.resources.limits.cpu=2000m \
 --set gateways.istio-ingressgateway.resources.limits.memory=1024Mi \
 --set gateways.istio-ingressgateway.resources.requests.cpu=100m \
@@ -161,6 +163,7 @@ applications/istio-ingress
 
 ### istio-egress
 helm install istio-egress --namespace istio-system \
+--set global.proxy.image=172.16.10.64:8082/istio/istio/proxyv2:1.8.0 \
 --set gateways.istio-egressgateway.resources.limits.cpu=2000m \
 --set gateways.istio-egressgateway.resources.limits.memory=1024Mi \
 --set gateways.istio-egressgateway.resources.requests.cpu=100m \
