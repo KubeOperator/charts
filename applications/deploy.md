@@ -138,7 +138,7 @@ applications/grafana
 
 ### istio-base
 helm install istio-base --namespace istio-system \
---set global.istiod.enableAnalysis=true
+--set global.istiod.enableAnalysis=true \
 applications/istio-base
 
 ### istio-pilot
