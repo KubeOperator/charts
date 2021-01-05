@@ -113,16 +113,16 @@ applications/loki-stack
 
 ### grafana
 $ helm install grafana --namespace kube-operator \
---set image.repository=172.16.10.181:8082/grafana/grafana \
---set image.tag=7.3.3 \
+--set image.repository=172.16.10.64:8082/kubeoperator/grafana \
+--set image.tag=7.3.3-amd64 \
 --set service.type=NodePort \
 --set nodeSelector."kubernetes\.io/hostname"=wanghe-master-1 \
 --set persistence.enabled=true \
 --set persistence.storageClassName=nfs-sc \
 --set persistence.size=10Gi \
 --set initChownData.enabled=true \
---set initChownData.image.repository=172.16.10.181:8082/busybox \
---set initChownData.image.tag=1.31.1 \
+--set initChownData.image.repository=172.16.10.64:8082/kubeoperator/busybox \
+--set initChownData.image.tag=1.28-amd64 \
 --set adminPassword=1qaz@WSX \
 --set datasources."datasources\.yaml".apiVersion=1 \
 --set datasources."datasources\.yaml".datasources[0].name=MYDS_Prometheus \
@@ -134,6 +134,15 @@ $ helm install grafana --namespace kube-operator \
 --set datasources."datasources\.yaml".datasources[1].type=loki \
 --set datasources."datasources\.yaml".datasources[1].url=http://loki:3100 \
 --set datasources."datasources\.yaml".datasources[1].access=proxy \
+--set dashboardProviders."dashboardproviders\.yaml".apiVersion=1 \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].name="default" \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].orgId=1 \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].folder="" \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].type=file \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].disableDeletion=false \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].editable=true \
+--set dashboardProviders."dashboardproviders\.yaml".providers[0].options.path=/var/lib/grafana/dashboards/default \
+--set dashboards.default.custom-dashboard.file=dashboards/custom-dashboard.json \
 applications/grafana
 
 ### istio-base
