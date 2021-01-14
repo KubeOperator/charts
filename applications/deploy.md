@@ -123,6 +123,8 @@ $ helm install grafana --namespace kube-operator \
 --set initChownData.enabled=true \
 --set initChownData.image.repository=172.16.10.64:8082/kubeoperator/busybox \
 --set initChownData.image.tag=1.28-amd64 \
+--set downloadDashboardsImage.repository=172.16.10.64:8082/curlimages/curl \
+--set downloadDashboardsImage.tag=7.73.0 \
 --set adminPassword=1qaz@WSX \
 --set datasources."datasources\.yaml".apiVersion=1 \
 --set datasources."datasources\.yaml".datasources[0].name=MYDS_Prometheus \
