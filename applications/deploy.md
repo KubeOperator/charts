@@ -2,7 +2,7 @@
 $ helm repo add applications http://172.16.10.64:8081/repository/applications
 
 ### kubernetes-dashboard
-$ helm install dashboard --namespace kube-operator \
+$ helm install dashboard --namespace kube-operator --version 2.2.0 \
 --set image.repository=172.16.10.64:8082/kubernetesui/dashboard \
 --set image.tag=v2.0.3 \
 --set extraArgs[0]=--enable-skip-login \
@@ -16,23 +16,18 @@ $ helm install dashboard --namespace kube-operator \
 applications/kubernetes-dashboard
 
 ### kubeapps 不支持arm64架构
-$ helm install kubeapps --namespace kube-operator \
+$ helm install kubeapps --namespace kube-operator --version 5.0.1 \
 --set global.imageRegistry=172.16.10.64:8082 \
 --set global.storageClass=nfs-sc \
---set useHelm3=true \
 --set apprepository.initialRepos[0].name=kubeoperator \
 --set apprepository.initialRepos[0].url=http://172.16.10.64:8081/repository/kubeapps/ \
---set postgresql.enabled=true \
---set postgresql.master.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
---set postgresql.slave.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
---set postgresql.image.repository=postgres \
---set postgresql.image.tag=11-alpine \
+--set postgresql.primary.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set postgresql.persistence.enabled=true \
 --set postgresql.persistence.size=8Gi \
 applications/kubeapps
 
-### chartmuseum 不支持arm64架构
-$ helm install chartmuseum --namespace kube-operator \
+### chartmuseum
+$ helm install chartmuseum --namespace kube-operator  --version 2.13.0 \
 --set image.repository=172.16.10.64:8082/chartmuseum/chartmuseum \
 --set image.tag=v0.12.0 \
 --set service.type=NodePort \
@@ -44,7 +39,7 @@ $ helm install chartmuseum --namespace kube-operator \
 applications/chartmuseum
 
 ### docker-registry
-$ helm install registry --namespace kube-operator \
+$ helm install registry --namespace kube-operator --version 1.9.3 \
 --set image.repository=172.16.10.64:8082/registry \
 --set image.tag=2.7.1 \
 --set nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
@@ -55,24 +50,23 @@ $ helm install registry --namespace kube-operator \
 applications/docker-registry
 
 ### prometheus
-### arm64: kube-state-metrics.image.repository=172.16.10.64:8082/carlosedp/kube-state-metrics
-$ helm install prometheus --namespace kube-operator \
+$ helm install prometheus --namespace kube-operator --version 11.5.0 \
 --set alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
 --set configmapReload.prometheus.image.repository=172.16.10.64:8082/jimmidyson/configmap-reload \
---set configmapReload.prometheus.image.tag=v0.3.0 \
+--set configmapReload.prometheus.image.tag=v0.4.0 \
 --set configmapReload.alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
 --set kubeStateMetrics.enabled=true \
---set kube-state-metrics.image.repository=172.16.10.64:8082/coreos/kube-state-metrics \
+--set kube-state-metrics.image.repository=172.16.10.64:8082/carlosedp/kube-state-metrics \
 --set kube-state-metrics.image.tag=v1.9.5 \
 --set nodeExporter.enabled=true \
 --set nodeExporter.image.repository=172.16.10.64:8082/prom/node-exporter \
---set nodeExporter.image.tag=v0.18.1 \
+--set nodeExporter.image.tag=v1.0.1 \
 --set server.enabled=true \
 --set server.service.type=NodePort \
 --set server.image.repository=172.16.10.64:8082/prom/prometheus \
---set server.image.tag=v2.18.1 \
+--set server.image.tag=v2.20.1 \
 --set server.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set server.persistentVolume.enabled=true \
 --set server.persistentVolume.size=8Gi \
@@ -82,7 +76,7 @@ $ helm install prometheus --namespace kube-operator \
 applications/prometheus
 
 ### efk 不支持arm64架构
-$ helm install logging --namespace kube-operator \
+$ helm install logging --namespace kube-operator --version 1.0.0 \
 --set fluentd-elasticsearch.image.repository=172.16.10.64:8082/fluentd_elasticsearch/fluentd \
 --set fluentd-elasticsearch.image.tag=v2.8.0 \
 --set fluentd-elasticsearch.elasticsearch.logstashPrefix=logstash \
@@ -97,22 +91,22 @@ $ helm install logging --namespace kube-operator \
 applications/logging
 
 ### loki-stack
-$ helm install loki --namespace kube-operator \
+$ helm install loki --namespace kube-operator --version 2.0.0 \
 --set loki.image.repository=172.16.10.64:8082/grafana/loki \
---set loki.image.tag=2.0.0 \
+--set loki.image.tag=2.1.0 \
 --set loki.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set loki.persistence.enabled=true \
 --set loki.persistence.size=8Gi \
 --set loki.persistence.storageClassName=nfs-sc \
 --set loki.service.type=NodePort \
 --set promtail.image.repository=172.16.10.64:8082/grafana/promtail \
---set promtail.image.tag=2.0.0 \
+--set promtail.image.tag=2.1.0 \
 --set promtail.dockerPath="/data/docker" \
 applications/loki-stack
 
 
 ### grafana
-$ helm install grafana --namespace kube-operator \
+$ helm install grafana --namespace kube-operator --version 6.1.15 \
 --set image.repository=172.16.10.64:8082/kubeoperator/grafana \
 --set image.tag=7.3.3-amd64 \
 --set service.type=NodePort \
