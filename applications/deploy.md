@@ -91,7 +91,7 @@ $ helm install logging --namespace kube-operator --version 1.0.0 \
 applications/logging
 
 ### loki-stack
-$ helm install loki --namespace kube-operator --version 2.0.0 \
+$ helm install loki --namespace kube-operator --version 2.3.1 \
 --set loki.image.repository=172.16.10.64:8082/grafana/loki \
 --set loki.image.tag=2.1.0 \
 --set loki.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
