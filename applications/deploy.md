@@ -50,7 +50,7 @@ $ helm install registry --namespace kube-operator --version 1.9.3 \
 applications/docker-registry
 
 ### prometheus
-$ helm install prometheus --namespace kube-operator --version 11.5.0 \
+$ helm install prometheus --namespace kube-operator --version 11.12.1 \
 --set alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
 --set configmapReload.prometheus.image.repository=172.16.10.64:8082/jimmidyson/configmap-reload \
