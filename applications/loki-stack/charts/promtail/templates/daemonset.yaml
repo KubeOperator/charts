@@ -75,12 +75,12 @@ spec:
               mountPath: /etc/promtail
             - name: run
               mountPath: /run/promtail
-            - name: docker
-              mountPath: "{{ .Values.dockerPath }}/containers"
-              readOnly: true
-            - name: pods
-              mountPath: /var/log/pods
-              readOnly: true
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           env:
             {{- with .Values.env }}
               {{- toYaml . | nindent 12 }}
@@ -121,9 +121,9 @@ spec:
         - name: run
           hostPath:
             path: /run/promtail
-        - name: docker
-          hostPath:
-            path: "{{ .Values.dockerPath }}/containers"
-        - name: pods
-          hostPath:
-            path: /var/log/pods
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}

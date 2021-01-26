@@ -123,7 +123,25 @@ tolerations:
   operator: Exists
   effect: NoSchedule
 
-dockerPath: /var/lib/docker
+# Extra volumes to scrape logs from
+volumes:
+- name: docker
+  hostPath:
+    path: /var/lib/docker/containers
+- name: pods
+  hostPath:
+    path: /var/log/pods
+
+# Custom volumes together with the default ones
+extraVolumes: []
+
+volumeMounts:
+- name: docker
+  mountPath: /var/lib/docker/containers
+  readOnly: true
+- name: pods
+  mountPath: /var/log/pods
+  readOnly: true
 
 # Custom volumeMounts together with the default ones
 extraVolumeMounts: []

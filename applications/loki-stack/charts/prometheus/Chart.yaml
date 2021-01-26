@@ -21,4 +21,4 @@ sources:
 - https://github.com/prometheus/pushgateway
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
-version: 11.16.5
+version: 11.16.9
