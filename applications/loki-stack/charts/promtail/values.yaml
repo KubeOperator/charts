@@ -124,6 +124,7 @@ tolerations:
   effect: NoSchedule
 
 # Extra volumes to scrape logs from
+dockerPath: /var/lib/docker
 volumes:
 - name: docker
   hostPath:
