@@ -3,7 +3,7 @@
 ##
 image:
   repository: redis
-  tag: 5.0.6-alpine
+  tag: 6.0.7-alpine
   pullPolicy: IfNotPresent
 
 ## Reference to one or more secrets to be used when pulling images
@@ -16,11 +16,22 @@ imagePullSecrets: []
 ## replicas number for each component
 replicas: 3
 
+## read-only replicas
+## indexed slaves get never promoted to be master
+## index starts with 0 - which is master on init
+## i.e. "8,9" means 8th and 9th slave will be replica with replica-priority=0
+## see also: https://redis.io/topics/sentinel
+ro_replicas: ""
+
 ## Kubernetes priorityClass name for the redis-ha-server pod
 # priorityClassName: ""
 
 ## Custom labels for the redis pod
 labels: {}
+
+configmap:
+  ## Custom labels for the redis configmap
+  labels: {}
 
 ## Pods Service Account
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -31,6 +42,9 @@ serviceAccount:
   ## The name of the ServiceAccount to use.
   ## If not set and create is true, a name is generated using the redis-ha.fullname template
   # name:
+  ## opt in/out of automounting API credentials into container
+  ## https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  automountToken: false
 
 ## Enables a HA Proxy for better LoadBalancing / Sentinel Master support. Automatically proxies to Redis master.
 ## Recommend for externally exposed Redis clusters.
@@ -47,6 +61,9 @@ haproxy:
     tag: 2.0.4
     pullPolicy: IfNotPresent
 
+  ## Custom labels for the haproxy pod
+  labels: {}
+
   ## Reference to one or more secrets to be used when pulling images
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   ##
@@ -56,6 +73,15 @@ haproxy:
   annotations: {}
   resources: {}
   emptyDir: {}
+
+  ## PodSecurityPolicy configuration
+  ## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+  ##
+  podSecurityPolicy:
+    ## Specifies whether a PodSecurityPolicy should be created
+    ##
+    create: false
+
   ## Enable sticky sessions to Redis nodes via HAProxy
   ## Very useful for long-living connections as in case of Sentry for example
   stickyBalancing: false
@@ -66,6 +92,8 @@ haproxy:
   service:
     type: ClusterIP
     loadBalancerIP:
+    # List of CIDR's allowed to connect to LoadBalancer
+    # loadBalancerSourceRanges: []
     annotations: {}
   serviceAccount:
     create: true
@@ -76,14 +104,14 @@ haproxy:
     enabled: false
     # prometheus port & scrape path
     port: 9101
-    portName: exporter-port
+    portName: http-exporter-port
     scrapePath: /metrics
 
     serviceMonitor:
       # When set true then use a ServiceMonitor to configure scraping
       enabled: false
       # Set the namespace the ServiceMonitor should be deployed
-      # namespace: monitoring
+      # namespace: "monitoring"
       # Set how frequently Prometheus should scrape
       # interval: 30s
       # Set path to redis-exporter telemtery-path
@@ -96,9 +124,11 @@ haproxy:
     resources: {}
   timeout:
     connect: 4s
-    server: 30s
-    client: 30s
+    server: 330s
+    client: 330s
     check: 2s
+  checkInterval: 1s
+
   securityContext:
     runAsUser: 1000
     fsGroup: 1000
@@ -116,11 +146,22 @@ haproxy:
   ## Custom config-haproxy.cfg files used to override default settings. If this file is
   ## specified then the config-haproxy.cfg above will be ignored.
   # customConfig: |-
-      # Define configuration here
+    # Define configuration here
   ## Place any additional configuration section to add to the default config-haproxy.cfg
   # extraConfig: |-
-      # Define configuration here
+    # Define configuration here
 
+  ## Container lifecycle hooks
+  ## Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+  lifecycle: {}
+
+## PodSecurityPolicy configuration
+## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+##
+podSecurityPolicy:
+  ## Specifies whether a PodSecurityPolicy should be created
+  ##
+  create: false
 
 ## Role Based Access
 ## Ref: https://kubernetes.io/docs/admin/authorization/rbac/
@@ -128,6 +169,10 @@ haproxy:
 rbac:
   create: true
 
+# NOT RECOMMENDED: Additional container in which you can execute arbitrary commands to update sysctl parameters
+# You can now use securityContext.sysctls to leverage this capability
+# Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/
+##
 sysctlImage:
   enabled: false
   command: []
@@ -147,6 +192,35 @@ sysctlImage:
 redis:
   port: 6379
   masterGroupName: "mymaster"       # must match ^[\\w-\\.]+$) and can be templated
+
+  ## Configures redis with tls-port parameter
+  # tlsPort: 6385
+
+  ## Configures redis with tls-replication parameter, if true sets "tls-replication yes" in redis.conf
+  # tlsReplication: true
+
+  ## It is possible to disable client side certificates authentication when "authClients" is set to "no"
+  # authClients: "no"
+
+  ## Increase terminationGracePeriodSeconds to allow writing large RDB snapshots. (k8s default is 30s)
+  ## https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination-forced
+  terminationGracePeriodSeconds: 60
+
+  # liveness probe parameters for redis container
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 5
+
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 5
+
   config:
     ## Additional redis conf options can be added below
     ## For all available options see http://download.redis.io/redis-stable/redis.conf
@@ -162,11 +236,10 @@ redis:
     rdbcompression: "yes"
     rdbchecksum: "yes"
 
-
   ## Custom redis.conf files used to override default settings. If this file is
   ## specified then the redis.config above will be ignored.
   # customConfig: |-
-      # Define configuration here
+    # Define configuration here
 
   resources: {}
   #  requests:
@@ -175,9 +248,58 @@ redis:
   #  limits:
   #    memory: 700Mi
 
+  ## Container lifecycle hooks
+  ## Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+  lifecycle: {}
+
+  ## annotations for the redis statefulset
+  annotations: {}
+
+  ## updateStrategy for Redis StatefulSet
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+  updateStrategy:
+    type: RollingUpdate
+
 ## Sentinel specific configuration options
 sentinel:
   port: 26379
+
+  ## Configures sentinel with tls-port parameter
+  # tlsPort: 26385
+
+  ## Configures sentinel with tls-replication parameter, if true sets "tls-replication yes" in sentinel.conf
+  # tlsReplication: true
+
+  ## It is possible to disable client side certificates authentication when "authClients" is set to "no"
+  # authClients: "no"
+
+  ## Configures sentinel with AUTH (requirepass params)
+  auth: false
+
+  # password: password
+
+  ## Use existing secret containing key `authKey` (ignores sentinel.password)
+  # existingSecret: sentinel-secret
+
+  ## Defines the key holding the sentinel password in existing secret.
+  authKey: sentinel-password
+
+  # liveness probe parameters for sentinel container
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 5
+
+  # readiness probe parameters for sentinel container
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 15
+    successThreshold: 3
+    failureThreshold: 5
+
   quorum: 2
   config:
     ## Additional sentinel conf options can be added below. Only options that
@@ -193,7 +315,7 @@ sentinel:
   ## Custom sentinel.conf files used to override default settings. If this file is
   ## specified then the sentinel.config above will be ignored.
   # customConfig: |-
-      # Define configuration here
+    # Define configuration here
 
   resources: {}
   #  requests:
@@ -202,10 +324,21 @@ sentinel:
   #  limits:
   #    memory: 200Mi
 
+  ## Container lifecycle hooks
+  ## Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+  lifecycle: {}
+
 securityContext:
   runAsUser: 1000
   fsGroup: 1000
   runAsNonRoot: true
+
+  ## Assuming your kubelet allows it, you can the following instructions to configure
+  ## specific sysctl parameters
+  ##
+  # sysctls:
+  # - name: net.core.somaxconn
+  #   value: '10000'
 
 ## Node labels, affinity, and tolerations for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
@@ -262,12 +395,21 @@ affinity: |
 exporter:
   enabled: false
   image: oliver006/redis_exporter
-  tag: v1.3.2
+  tag: v1.15.1
   pullPolicy: IfNotPresent
 
   # prometheus port & scrape path
   port: 9121
+  portName: exporter-port
   scrapePath: /metrics
+
+  # Address/Host for Redis instance. Default: localhost
+  # Exists to circumvent issues with IPv6 dns resolution that occurs on certain environments
+  ##
+  address: localhost
+
+  ## Set this to true if you want to connect to redis tls port
+  # sslEnabled: true
 
   # cpu/memory resource limits/requests
   resources: {}
@@ -304,7 +446,7 @@ exporter:
     # When set true then use a ServiceMonitor to configure scraping
     enabled: false
     # Set the namespace the ServiceMonitor should be deployed
-    # namespace: monitoring
+    # namespace: "monitoring"
     # Set how frequently Prometheus should scrape
     # interval: 30s
     # Set path to redis-exporter telemtery-path
@@ -313,6 +455,19 @@ exporter:
     # labels: {}
     # Set timeout for scrape
     # timeout: 10s
+
+  # prometheus exporter SCANS redis db which can take some time
+  # allow different probe settings to not let container crashloop
+  livenessProbe:
+    initialDelaySeconds: 15
+    timeoutSeconds: 3
+    periodSeconds: 15
+
+  readinessProbe:
+    initialDelaySeconds: 15
+    timeoutSeconds: 3
+    periodSeconds: 15
+    successThreshold: 2
 
 podDisruptionBudget: {}
   # maxUnavailable: 1
@@ -342,8 +497,6 @@ persistentVolume:
     - ReadWriteOnce
   size: 10Gi
   annotations: {}
-  # reclaimPolicy per https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming
-  reclaimPolicy: ""
 init:
   resources: {}
 
@@ -360,3 +513,37 @@ hostPath:
   chown: true
 
 emptyDir: {}
+
+tls:
+  ## Fill the name of secret if you want to use your own TLS certificates.
+  ## The secret should contains keys named by "tls.certFile" - the certificate, "tls.keyFile" - the private key, "tls.caCertFile" - the certificate of CA and "tls.dhParamsFile" - the dh parameter file
+  ## These secret will be genrated using files from certs folder if the secretName is not set and redis.tlsPort is set
+  # secretName: tls-secret
+
+  ## Name of certificate file
+  certFile: redis.crt
+  ## Name of key file
+  keyFile: redis.key
+  ## Name of Diffie-Hellman (DH) key exchange parameters file
+  # dhParamsFile: redis.dh
+  ## Name of CA certificate file
+  caCertFile: ca.crt
+
+# restore init container is executed if restore.[s3|ssh].source is not false
+# restore init container creates /data/dump.rdb_ from original if exists
+# restore init container overrides /data/dump.rdb
+# secrets are stored into environment of init container - stored encoded on k8s
+# REQUIRED for s3 restore: AWS 'access_key' and 'secret_key'
+# EXAMPLE source for s3 restore: 's3://bucket/dump.rdb'
+# REQUIRED for ssh restore: 'key' should be in one line including CR i.e. '-----BEGIN RSA PRIVATE KEY-----\n...\n...\n...\n-----END RSA PRIVATE KEY-----'
+# EXAMPLE source for ssh restore: 'user@server:/path/dump.rdb'
+restore:
+  timeout: 600
+  s3:
+    source: false
+    access_key: ""
+    secret_key: ""
+    region: ""
+  ssh:
+    source: false
+    key: ""

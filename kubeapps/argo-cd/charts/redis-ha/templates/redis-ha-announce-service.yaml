@@ -8,7 +8,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ $fullName }}-announce-{{ $i }}
-  namespace: {{ $namespace }}
+  namespace: {{ $namespace | quote}}
   labels:
 {{ include "labels.standard" $root | indent 4 }}
   annotations:
@@ -20,19 +20,35 @@ spec:
   publishNotReadyAddresses: true
   type: ClusterIP
   ports:
-  - name: server
+  {{- if ne (int $root.Values.redis.port) 0 }}
+  - name: tcp-server
     port: {{ $root.Values.redis.port }}
     protocol: TCP
     targetPort: redis
-  - name: sentinel
+  {{- end }}
+  {{- if $root.Values.redis.tlsPort }}
+  - name: server-tls
+    port: {{ $root.Values.redis.tlsPort }}
+    protocol: TCP
+    targetPort: redis-tls
+  {{- end }}
+  {{- if ne (int $root.Values.sentinel.port) 0 }}
+  - name: tcp-sentinel
     port: {{ $root.Values.sentinel.port }}
     protocol: TCP
     targetPort: sentinel
+  {{- end }}
+  {{- if $root.Values.sentinel.tlsPort }}
+  - name: sentinel-tls
+    port: {{ $root.Values.sentinel.tlsPort }}
+    protocol: TCP
+    targetPort: sentinel-tls
+  {{- end }}
   {{- if $root.Values.exporter.enabled }}
-  - name: exporter
+  - name: http-exporter
     port: {{ $root.Values.exporter.port }}
     protocol: TCP
-    targetPort: exporter-port
+    targetPort: {{ $root.Values.exporter.portName }}
   {{- end }}
   selector:
     release: {{ $root.Release.Name }}

@@ -2,12 +2,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ template "redis-ha.fullname" . }}-configmap
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     app: {{ template "redis-ha.fullname" . }}
+    {{- range $key, $value := .Values.configmap.labels }}
+    {{ $key }}: {{ $value | toString }}
+    {{- end }}
 data:
   redis.conf: |
 {{- include "config-redis.conf" . }}
@@ -18,7 +21,7 @@ data:
   init.sh: |
 {{- include "config-init.sh" . }}
 {{ if .Values.haproxy.enabled }}
-  haproxy.cfg: |-
+  haproxy.cfg: |
 {{- include "config-haproxy.cfg" . }}
 {{- end }}
   haproxy_init.sh: |

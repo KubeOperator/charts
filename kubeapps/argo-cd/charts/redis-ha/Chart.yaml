@@ -1,7 +1,7 @@
 apiVersion: v1
-appVersion: 5.0.6
-description: Highly available Kubernetes implementation of Redis
-engine: gotpl
+appVersion: 6.0.7
+description: This Helm chart provides a highly available Redis implementation with
+  a master/slave configuration and uses Sentinel sidecars for failover management
 home: http://redis.io/
 icon: https://upload.wikimedia.org/wikipedia/en/thumb/6/6b/Redis_Logo.svg/1200px-Redis_Logo.svg.png
 keywords:
@@ -16,6 +16,6 @@ maintainers:
 name: redis-ha
 sources:
 - https://redis.io/download
-- https://github.com/scality/Zenko/tree/development/1.0/kubernetes/zenko/charts/redis-ha
+- https://github.com/DandyDeveloper/charts/blob/master/charts/redis-ha
 - https://github.com/oliver006/redis_exporter
-version: 4.4.2
+version: 4.12.14

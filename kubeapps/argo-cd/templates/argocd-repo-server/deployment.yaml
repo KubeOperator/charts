@@ -4,18 +4,12 @@ kind: Deployment
 metadata:
   name: {{ template "argo-cd.repoServer.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "argo-cd.name" . }}-{{ .Values.repoServer.name }}
-    helm.sh/chart: {{ include "argo-cd.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/part-of: argocd
-    app.kubernetes.io/component: {{ .Values.repoServer.name }}
+    {{- include "argo-cd.labels" (dict "context" . "component" .Values.repoServer.name "name" .Values.repoServer.name) | nindent 4 }}
     app.kubernetes.io/version: {{ default .Values.global.image.tag .Values.repoServer.image.tag | quote }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "argo-cd.name" . }}-{{ .Values.repoServer.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "argo-cd.selectorLabels" (dict "context" . "name" .Values.repoServer.name) | nindent 6 }}
   revisionHistoryLimit: 5
   {{- if (ne .Values.repoServer.autoscaling.enabled true) }}
   replicas: {{ .Values.repoServer.replicas }}
@@ -29,12 +23,7 @@ spec:
       {{- end }}
       {{- end }}
       labels:
-        app.kubernetes.io/name: {{ include "argo-cd.name" . }}-{{ .Values.repoServer.name }}
-        helm.sh/chart: {{ include "argo-cd.chart" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/part-of: argocd
-        app.kubernetes.io/component: {{ .Values.repoServer.name }}
+        {{- include "argo-cd.labels" (dict "context" . "component" .Values.repoServer.name "name" .Values.repoServer.name) | nindent 8 }}
         app.kubernetes.io/version: {{ default .Values.global.image.tag .Values.repoServer.image.tag | quote }}
         {{- if .Values.repoServer.podLabels }}
 {{- toYaml .Values.repoServer.podLabels | nindent 8 }}
@@ -52,14 +41,14 @@ spec:
         image: {{ default .Values.global.image.repository .Values.repoServer.image.repository }}:{{ default .Values.global.image.tag .Values.repoServer.image.tag }}
         imagePullPolicy: {{ default .Values.global.image.imagePullPolicy .Values.repoServer.image.imagePullPolicy }}
         command:
-        {{- if .Values.openshift.enabled }}
         - uid_entrypoint.sh
-        {{- end }}
         - argocd-repo-server
         {{- if or (and .Values.redis.enabled (not $redisHa.enabled)) (and $redisHa.enabled $redisHa.haproxy.enabled) }}
         - --redis
         - {{ template "argo-cd.redis.fullname" . }}:{{ .Values.redis.servicePort }}
         {{- end }}
+        - --logformat
+        - {{ .Values.repoServer.logFormat }}
         - --loglevel
         - {{ .Values.repoServer.logLevel }}
         {{- with .Values.repoServer.extraArgs }}
@@ -78,10 +67,15 @@ spec:
           value: argocd
 {{- end }}
 {{- end }}
+        {{- with .Values.repoServer.envFrom }}
+        envFrom: {{- toYaml . | nindent 8 }}
+        {{- end }}
         volumeMounts:
         {{- if .Values.repoServer.volumeMounts }}
 {{- toYaml .Values.repoServer.volumeMounts | nindent 8}}
         {{- end }}
+        - mountPath: /app/config/gpg/keys
+          name: gpg-keyring
         {{- if .Values.configs.knownHosts }}
         - mountPath: /app/config/ssh
           name: ssh-known-hosts
@@ -90,6 +84,10 @@ spec:
         - mountPath: /app/config/tls
           name: tls-certs
         {{- end }}
+        - mountPath: /app/config/reposerver/tls
+          name: argocd-repo-server-tls
+        - mountPath: /tmp
+          name: tmp-dir
         ports:
         - name: repo-server
           containerPort: {{ .Values.repoServer.containerPort }}
@@ -138,6 +136,8 @@ spec:
       {{- if .Values.repoServer.volumes }}
 {{- toYaml .Values.repoServer.volumes | nindent 6}}
       {{- end }}
+      - emptyDir: {}
+        name: gpg-keyring
       {{- if .Values.configs.knownHosts }}
       - configMap:
           name: argocd-ssh-known-hosts-cm
@@ -148,6 +148,19 @@ spec:
           name: argocd-tls-certs-cm
         name: tls-certs
       {{- end }}
+      - name: argocd-repo-server-tls
+        secret:
+          items:
+          - key: tls.crt
+            path: tls.crt
+          - key: tls.key
+            path: tls.key
+          - key: ca.crt
+            path: ca.crt
+          optional: true
+          secretName: argocd-repo-server-tls
+      - emptyDir: {}
+        name: tmp-dir
       {{- if .Values.repoServer.initContainers }}
       initContainers:
 {{- toYaml .Values.repoServer.initContainers | nindent 6 }}
