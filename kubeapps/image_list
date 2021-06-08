@@ -5,7 +5,7 @@ argoproj/argocd:v1.6.1
 argoproj/argocd:v1.7.4
 argoproj/argocd:v2.0.3
 quay.io/dexidp/dex:v2.22.0
-quay.io/dexidp/dex:v2.27.0
+docker.io/dexidp/dex:v2.27.0
 docker.io/redis:5.0.8
 docker.io/redis:6.2.2-alpine
 )
