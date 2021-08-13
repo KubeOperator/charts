@@ -30,10 +30,24 @@ bitnami/harbor-registry:1.10.2-debian-10-r6
 bitnami/harbor-registryctl:1.10.2-debian-10-r6
 bitnami/postgresql:11.7.0-debian-10-r71
 bitnami/redis:5.0.8-debian-10-r39
+bitnami/bitnami-shell:10-debian-10-r150
+bitnami/nginx:1.21.1-debian-10-r24
+bitnami/harbor-portal:2.3.1-debian-10-r8
+bitnami/harbor-core:2.3.1-debian-10-r8
+bitnami/harbor-jobservice:2.3.1-debian-10-r9
+bitnami/harbor-registry:2.3.1-debian-10-r8
+bitnami/harbor-registryctl:2.3.1-debian-10-r9
+bitnami/chartmuseum:0.13.1-debian-10-r127
+bitnami/harbor-clair:2.3.1-debian-10-r9
+bitnami/harbor-adapter-clair:2.3.1-debian-10-r8
+bitnami/harbor-notary-server:2.3.1-debian-10-r9
+bitnami/harbor-notary-signer:2.3.1-debian-10-r9
+bitnami/harbor-adapter-trivy:2.3.1-debian-10-r8
 )
 
 jenkins=(
 bitnami/jenkins:2.222.1-debian-10-r12
+bitnami/jenkins:2.289.3-debian-10-r0
 )
 
 sonarqube=(
