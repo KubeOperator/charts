@@ -175,3 +175,13 @@ helm install istio-egress --namespace istio-system \
 --set gateways.istio-egressgateway.resources.requests.memory=128Mi \
 --set gateways.istio-egressgateway.type=NodePort \
 applications/istio-egress
+
+### kubepi
+helm install kubepi --namespace kube-operator \
+--set image.repository=kubeoperator/kubepi-server \
+--set image.tag=v1.0.1 \
+--set persistence.enabled=false \
+--set persistence.storageClassName=nfs \
+--set persistence.accessModes=ReadWriteOnce \
+--set persistence.size=10Gi \
+applications/kubepi
