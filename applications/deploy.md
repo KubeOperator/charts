@@ -180,6 +180,7 @@ applications/istio-egress
 helm install kubepi --namespace kube-operator \
 --set image.repository=kubeoperator/kubepi-server \
 --set image.tag=v1.0.1 \
+--set nodeSelector."kubernetes\.io/hostname"=wanghe-worker-1 \
 --set persistence.enabled=false \
 --set persistence.storageClassName=nfs \
 --set persistence.accessModes=ReadWriteOnce \
