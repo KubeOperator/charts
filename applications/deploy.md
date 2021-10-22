@@ -185,4 +185,5 @@ helm install kubepi --namespace kube-operator \
 --set persistence.storageClassName=nfs \
 --set persistence.accessModes=ReadWriteOnce \
 --set persistence.size=10Gi \
+--set securityContext.privileged=true \
 applications/kubepi
