@@ -187,3 +187,12 @@ helm install kubepi --namespace kube-operator \
 --set persistence.size=10Gi \
 --set securityContext.privileged=true \
 applications/kubepi
+
+### gatekeeper
+$ helm install gatekeeper --namespace kube-operator \
+--set postInstall.labelNamespace.image.repository=172.16.10.181:8082/openpolicyagent/gatekeeper-crds \
+--set postInstall.labelNamespace.image.tag=v3.7.0 \
+--set image.repository=172.16.10.181:8082/openpolicyagent/gatekeeper \
+--set image.crdRepository=172.16.10.181:8082/openpolicyagent/gatekeeper-crds \
+--set image.release=v3.7.0 \
+nexus/gatekeeper
