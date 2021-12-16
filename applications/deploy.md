@@ -1,22 +1,8 @@
 # 添加部署机nexus chart仓库
 $ helm repo add applications http://172.16.10.64:8081/repository/applications
 
-### kubernetes-dashboard
-$ helm install dashboard --namespace kube-operator --version 2.2.0 \
---set image.repository=172.16.10.64:8082/kubernetesui/dashboard \
---set image.tag=v2.0.3 \
---set extraArgs[0]=--enable-skip-login \
---set extraArgs[1]=--enable-insecure-login \
---set protocolHttp=true \
---set service.type=NodePort \
---set service.externalPort=9090 \
---set metricsScraper.enabled=true \
---set metricsScraper.image.repository=172.16.10.64:8082/kubernetesui/metrics-scraper \
---set metricsScraper.image.tag=v1.0.4 \
-applications/kubernetes-dashboard
-
 ### kubeapps 不支持arm64架构
-$ helm install kubeapps --namespace kube-operator --version 5.0.1 \
+$ helm install kubeapps --namespace kube-operator --version 7.6.2 \
 --set global.imageRegistry=172.16.10.64:8082 \
 --set global.storageClass=nfs-sc \
 --set apprepository.initialRepos[0].name=kubeoperator \
@@ -50,23 +36,23 @@ $ helm install registry --namespace kube-operator --version 1.9.3 \
 applications/docker-registry
 
 ### prometheus
-$ helm install prometheus --namespace kube-operator --version 11.12.1 \
+$ helm install prometheus --namespace kube-operator --version 15.0.1 \
 --set alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
 --set configmapReload.prometheus.image.repository=172.16.10.64:8082/jimmidyson/configmap-reload \
---set configmapReload.prometheus.image.tag=v0.4.0 \
+--set configmapReload.prometheus.image.tag=v0.5.0 \
 --set configmapReload.alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
 --set kubeStateMetrics.enabled=true \
---set kube-state-metrics.image.repository=172.16.10.64:8082/carlosedp/kube-state-metrics \
---set kube-state-metrics.image.tag=v1.9.5 \
+--set kube-state-metrics.image.repository=172.16.10.64:8082/dyrnq/kube-state-metrics \
+--set kube-state-metrics.image.tag=v2.2.4 \
 --set nodeExporter.enabled=true \
---set nodeExporter.image.repository=172.16.10.64:8082/prom/node-exporter \
---set nodeExporter.image.tag=v1.0.1 \
+--set nodeExporter.image.repository=172.16.10.64:8082/prometheus/node-exporter \
+--set nodeExporter.image.tag=v1.3.0 \
 --set server.enabled=true \
 --set server.service.type=NodePort \
---set server.image.repository=172.16.10.64:8082/prom/prometheus \
---set server.image.tag=v2.20.1 \
+--set server.image.repository=172.16.10.64:8082/prometheus/prometheus \
+--set server.image.tag=v2.31.1 \
 --set server.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set server.persistentVolume.enabled=true \
 --set server.persistentVolume.size=8Gi \
@@ -106,9 +92,11 @@ applications/loki-stack
 
 
 ### grafana
-$ helm install grafana --namespace kube-operator --version 6.1.15 \
---set image.repository=172.16.10.64:8082/kubeoperator/grafana \
---set image.tag=7.3.3-amd64 \
+$ helm install grafana --namespace kube-operator --version 6.19.0 \
+--set image.repository=172.16.10.64:8082/grafana/grafana \
+--set image.tag=8.3.1 \
+--set testFramework.image=172.16.10.64:8082/bats/bats \
+--set testFramework.tag=v1.4.1 \
 --set service.type=NodePort \
 --set nodeSelector."kubernetes\.io/hostname"=wanghe-master-1 \
 --set persistence.enabled=true \
@@ -116,7 +104,7 @@ $ helm install grafana --namespace kube-operator --version 6.1.15 \
 --set persistence.size=10Gi \
 --set initChownData.enabled=true \
 --set initChownData.image.repository=172.16.10.64:8082/kubeoperator/busybox \
---set initChownData.image.tag=1.28-amd64 \
+--set initChownData.image.tag=1.31.1 \
 --set downloadDashboardsImage.repository=172.16.10.64:8082/curlimages/curl \
 --set downloadDashboardsImage.tag=7.73.0 \
 --set adminPassword=1qaz@WSX \
@@ -176,17 +164,6 @@ helm install istio-egress --namespace istio-system \
 --set gateways.istio-egressgateway.type=NodePort \
 applications/istio-egress
 
-### kubepi
-helm install kubepi --namespace kube-operator \
---set image.repository=kubeoperator/kubepi-server \
---set image.tag=v1.0.1 \
---set nodeSelector."kubernetes\.io/hostname"=wanghe-worker-1 \
---set persistence.enabled=false \
---set persistence.storageClassName=nfs \
---set persistence.accessModes=ReadWriteOnce \
---set persistence.size=10Gi \
---set securityContext.privileged=true \
-applications/kubepi
 
 ### gatekeeper
 $ helm install gatekeeper --namespace kube-operator \
