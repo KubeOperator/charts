@@ -130,5 +130,6 @@ dmypy.json
 
 .DS_Store
 .idea/
+.vscode/
 gitlab-ce/.DS_Store
 

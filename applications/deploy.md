@@ -36,7 +36,7 @@ $ helm install registry --namespace kube-operator --version 1.9.3 \
 applications/docker-registry
 
 ### prometheus
-$ helm install prometheus --namespace kube-operator --version 15.0.1 \
+$ helm install prometheus --namespace kube-operator --version 15.10.1 \
 --set alertmanager.enabled=false \
 --set configmapReload.prometheus.enabled=true \
 --set configmapReload.prometheus.image.repository=172.16.10.181:8082/jimmidyson/configmap-reload \
@@ -45,14 +45,14 @@ $ helm install prometheus --namespace kube-operator --version 15.0.1 \
 --set configmapReload.prometheus.enabled=true \
 --set kubeStateMetrics.enabled=true \
 --set kube-state-metrics.image.repository=172.16.10.181:8082/dyrnq/kube-state-metrics \
---set kube-state-metrics.image.tag=v2.2.4 \
+--set kube-state-metrics.image.tag=v2.4.1 \
 --set nodeExporter.enabled=true \
 --set nodeExporter.image.repository=172.16.10.181:8082/prometheus/node-exporter \
 --set nodeExporter.image.tag=v1.3.0 \
 --set server.enabled=true \
 --set server.service.type=NodePort \
 --set server.image.repository=172.16.10.181:8082/prometheus/prometheus \
---set server.image.tag=v2.31.1 \
+--set server.image.tag=v2.34.0 \
 --set server.nodeSelector."kubernetes\.io/hostname"=wanghe-node1 \
 --set server.persistentVolume.enabled=true \
 --set server.persistentVolume.size=8Gi \

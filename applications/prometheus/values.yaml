@@ -55,6 +55,11 @@ alertmanager:
   ##
   priorityClassName: ""
 
+  ## Custom HTTP headers for Readiness Probe
+  ##
+  ## Useful for providing HTTP Basic Auth to healthchecks
+  probeHeaders: []
+
   ## Additional alertmanager container arguments
   ##
   extraArgs: {}
@@ -83,6 +88,13 @@ alertmanager:
     #   mountPath: /etc/secrets
     #   subPath: ""
     #   secretName: alertmanager-secret-files
+    #   readOnly: true
+
+  ## Additional alertmanager Configmap mounts
+  extraConfigmapMounts: []
+    # - name: template-files
+    #   mountPath: /etc/config/templates.d
+    #   configMap: alertmanager-template-files
     #   readOnly: true
 
   ## ConfigMap override where fullname is {{.Release.Name}}-{{.Values.alertmanager.configMapOverrideName}}
@@ -336,6 +348,9 @@ alertmanager:
     runAsGroup: 65534
     fsGroup: 65534
 
+  ## Security context to be added to alertmanager container
+  containerSecurityContext: {}
+
   service:
     annotations: {}
     labels: {}
@@ -381,6 +396,8 @@ configmapReload:
       tag: v0.5.0
       pullPolicy: IfNotPresent
 
+    # containerPort: 9533
+
     ## Additional configmap-reload container arguments
     ##
     extraArgs: {}
@@ -398,6 +415,8 @@ configmapReload:
       #   configMap: prometheus-alerts
       #   readOnly: true
 
+    ## Security context to be added to configmap-reload container
+    containerSecurityContext: {}
 
     ## configmap-reload resource requests and limits
     ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -419,6 +438,8 @@ configmapReload:
       tag: v0.5.0
       pullPolicy: IfNotPresent
 
+    # containerPort: 9533
+
     ## Additional configmap-reload container arguments
     ##
     extraArgs: {}
@@ -436,6 +457,8 @@ configmapReload:
       #   configMap: prometheus-alerts
       #   readOnly: true
 
+    ## Security context to be added to configmap-reload container
+    containerSecurityContext: {}
 
     ## configmap-reload resource requests and limits
     ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -566,7 +589,9 @@ nodeExporter:
     # requests:
     #   cpu: 100m
     #   memory: 30Mi
-
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
   # Custom DNS configuration to be added to node-exporter pods
   dnsConfig: {}
     # nameservers:
@@ -594,7 +619,7 @@ nodeExporter:
 
     # Exposed as a headless service:
     # https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
-    clusterIP: None
+    clusterIP: ""
 
     ## List of IP addresses at which the node-exporter service is available
     ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
@@ -634,7 +659,7 @@ server:
   #   sidecarContainers:
   #      webserver:
   #        image: nginx
-  sidecarContainers: []
+  sidecarContainers: {}
 
   # sidecarTemplateValues - context to be used in template for sidecarContainers
   # Example:
@@ -652,7 +677,7 @@ server:
   ##
   image:
     repository: quay.io/prometheus/prometheus
-    tag: v2.31.1
+    tag: v2.34.0
     pullPolicy: IfNotPresent
 
   ## prometheus server priorityClassName
@@ -690,6 +715,11 @@ server:
   ##       name: mysecret
   ##       key: username
   env: []
+
+  # List of flags to override default parameters, e.g:
+  # - --enable-feature=agent
+  # - --storage.agent.retention.max-time=30m
+  defaultFlagsOverride: []
 
   extraFlags:
     - web.enable-lifecycle
@@ -1028,6 +1058,9 @@ server:
   # When hostNetwork is enabled, you probably want to set this to ClusterFirstWithHostNet
   dnsPolicy: ClusterFirst
 
+  # Use hostPort
+  # hostPort: 9090
+
   ## Vertical Pod Autoscaler config
   ## Ref: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
   verticalAutoscaler:
@@ -1056,7 +1089,14 @@ server:
     runAsGroup: 65534
     fsGroup: 65534
 
+  ## Security context to be added to server container
+  containerSecurityContext: {}
+
   service:
+    ## If false, no Service will be created for the Prometheus server
+    ##
+    enabled: true
+
     annotations: {}
     labels: {}
     clusterIP: ""
@@ -1092,6 +1132,25 @@ server:
   ## Prometheus data retention period (default if not specified is 15 days)
   ##
   retention: "15d"
+
+  ## Array of extra Kubernetes manifests, in form of YAML object,
+  ## if you want to deploy
+  extraObjects: []
+  # - apiVersion: v1
+  #   kind: ConfigMap
+  #   metadata:
+  #     name: '{{ template "prometheus.name" . }}-extra-config'
+
+  ## Array of extra Kubernetes manifest, in form of template string,
+  ## if you want to deploy
+  extraTemplates: []
+  # - |
+  #   apiVersion: v1
+  #   kind: ConfigMap
+  #   metadata:
+  #     name: extra-config
+  #     labels:
+  #   {{- include "prometheus.server.labels" . | nindent 4 }}
 
 pushgateway:
   ## If false, pushgateway will not be installed
@@ -1256,6 +1315,9 @@ pushgateway:
     runAsUser: 65534
     runAsNonRoot: true
 
+  ## Security context to be added to push-gateway container
+  containerSecurityContext: {}
+
   service:
     annotations:
       prometheus.io/probe: pushgateway
@@ -1345,6 +1407,9 @@ alertmanagerFiles:
       group_interval: 5m
       receiver: default-receiver
       repeat_interval: 3h
+
+## Prometheus server ConfigMap entries for rule files (allow prometheus labels interpolation)
+ruleFiles: {}
 
 ## Prometheus server ConfigMap entries
 ##
@@ -1518,7 +1583,8 @@ serverFiles:
       # The relabeling allows the actual service scrape endpoint to be configured
       # via the following annotations:
       #
-      # * `prometheus.io/scrape`: Only scrape services that have a value of `true`
+      # * `prometheus.io/scrape`: Only scrape services that have a value of
+      # `true`, except if `prometheus.io/scrape-slow` is set to `true` as well.
       # * `prometheus.io/scheme`: If the metrics endpoint is secured then you will need
       # to set this to `https` & most likely set the `tls_config` of the scrape config.
       # * `prometheus.io/path`: If the metrics path is not `/metrics` override this.
@@ -1527,6 +1593,7 @@ serverFiles:
       # * `prometheus.io/param_<parameter>`: If the metrics endpoint uses parameters
       # then you can set any parameter
       - job_name: 'kubernetes-service-endpoints'
+        honor_labels: true
 
         kubernetes_sd_configs:
           - role: endpoints
@@ -1534,6 +1601,9 @@ serverFiles:
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
             action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape_slow]
+            action: drop
             regex: true
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
             action: replace
@@ -1546,7 +1616,7 @@ serverFiles:
           - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
             action: replace
             target_label: __address__
-            regex: ([^:]+)(?::\d+)?;(\d+)
+            regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
           - action: labelmap
             regex: __meta_kubernetes_service_annotation_prometheus_io_param_(.+)
@@ -1578,6 +1648,7 @@ serverFiles:
       # * `prometheus.io/param_<parameter>`: If the metrics endpoint uses parameters
       # then you can set any parameter
       - job_name: 'kubernetes-service-endpoints-slow'
+        honor_labels: true
 
         scrape_interval: 5m
         scrape_timeout: 30s
@@ -1600,7 +1671,7 @@ serverFiles:
           - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
             action: replace
             target_label: __address__
-            regex: ([^:]+)(?::\d+)?;(\d+)
+            regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
           - action: labelmap
             regex: __meta_kubernetes_service_annotation_prometheus_io_param_(.+)
@@ -1635,6 +1706,7 @@ serverFiles:
       #
       # * `prometheus.io/probe`: Only probe services that have a value of `true`
       - job_name: 'kubernetes-services'
+        honor_labels: true
 
         metrics_path: /probe
         params:
@@ -1665,12 +1737,14 @@ serverFiles:
       # The relabeling allows the actual pod scrape endpoint to be configured via the
       # following annotations:
       #
-      # * `prometheus.io/scrape`: Only scrape pods that have a value of `true`
+      # * `prometheus.io/scrape`: Only scrape pods that have a value of `true`,
+      # except if `prometheus.io/scrape-slow` is set to `true` as well.
       # * `prometheus.io/scheme`: If the metrics endpoint is secured then you will need
       # to set this to `https` & most likely set the `tls_config` of the scrape config.
       # * `prometheus.io/path`: If the metrics path is not `/metrics` override this.
       # * `prometheus.io/port`: Scrape the pod on the indicated port instead of the default of `9102`.
       - job_name: 'kubernetes-pods'
+        honor_labels: true
 
         kubernetes_sd_configs:
           - role: pod
@@ -1678,6 +1752,9 @@ serverFiles:
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow]
+            action: drop
             regex: true
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
             action: replace
@@ -1689,7 +1766,7 @@ serverFiles:
             regex: (.+)
           - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
-            regex: ([^:]+)(?::\d+)?;(\d+)
+            regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
             target_label: __address__
           - action: labelmap
@@ -1719,6 +1796,7 @@ serverFiles:
       # * `prometheus.io/path`: If the metrics path is not `/metrics` override this.
       # * `prometheus.io/port`: Scrape the pod on the indicated port instead of the default of `9102`.
       - job_name: 'kubernetes-pods-slow'
+        honor_labels: true
 
         scrape_interval: 5m
         scrape_timeout: 30s
@@ -1740,7 +1818,7 @@ serverFiles:
             regex: (.+)
           - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
-            regex: ([^:]+)(?::\d+)?;(\d+)
+            regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
             target_label: __address__
           - action: labelmap
