@@ -293,7 +293,7 @@ customReadinessProbe: {}
 service:
   ## @param service.type Jenkins service type
   ##
-  type: LoadBalancer
+  type: NodePort
   ## @param service.port Jenkins service HTTP port
   ##
   port: 80
@@ -423,7 +423,7 @@ ingress:
 persistence:
   ## @param persistence.enabled Enable persistence using Persistent Volume Claims
   ##
-  enabled: true
+  enabled: false
   ## @param persistence.storageClass Persistent Volume storage class
   ## If defined, storageClassName: <storageClass>
   ## If set to "-", storageClassName: "", which disables dynamic provisioning
@@ -535,7 +535,7 @@ metrics:
   service:
     ## @param metrics.service.type Jenkins exporter service type
     ##
-    type: ClusterIP
+    type: NodePort
     ## @param metrics.service.port Jenkins exporter service port
     ##
     port: 9122

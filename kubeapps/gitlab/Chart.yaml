@@ -1,0 +1,9 @@
+apiVersion: v2
+name: gitlab
+description: A Helm chart for GitLab
+type: application
+version: "1.0.0"
+appVersion: "15.0.3"
+maintainers:
+  - name: KubeOperator GitLab
+    email: kubeoperator@fit2cloud.com

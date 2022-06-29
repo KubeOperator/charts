@@ -1,0 +1,1864 @@
+## Pass in the name of a Kubernetes Secret that contains the needed secret for when you
+## pull images from a private Docker image repository.
+##
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+##
+imagePullSecrets: []
+#  - name: regcred
+
+redis:
+
+  ## Deploy Redis. Default is boolean `true`.
+  ##
+  enabled: true
+
+  ## Redis container image.
+  ##
+  image:
+    repository: 'registry.kubeoperator.io:8082/redis'
+    tag: '6.2.6'
+    pullPolicy: IfNotPresent
+
+  persistence:
+    ## Volume used to store GitLab Redis data. Default is boolean `false`.
+    ##
+    enabled: false
+    size: '10Gi'
+    ## Sets persistent volume claim's storageClassName. Defaults to `default`.
+    ##
+    storageClassName: 'default'
+    accessMode: 'ReadWriteOnce'
+
+  ## Select node(s) to deploy to matching one specific label name and one or
+  ## more values
+  ##
+  affinity: {}
+  #    nodeAffinity:
+  #      requiredDuringSchedulingIgnoredDuringExecution:
+  #        nodeSelectorTerms:
+  #        - matchExpressions:
+  #          - key: 'k3s.io/hostname'
+  #            operator: In
+  #            values:
+  #            - 'k3s-agent-1.example.com'
+
+  ## The port Redis listens on. The default is `6379`.
+  ##
+  port: 6379
+
+postgresql:
+
+  ## Deploy Postgresql. Default is boolean `true`.
+  ##
+  enabled: true
+
+  ## Postgresql container image
+  ##
+  image:
+    repository: 'registry.kubeoperator.io:8082/sameersbn/postgresql'
+    tag: '12-20200524'
+    pullPolicy: 'IfNotPresent'
+
+  persistence:
+    ## Volume used to store GitLab PostgreSQL data. Default is boolean `false`.
+    ##
+    enabled: false
+    size: '10Gi'
+    ## Sets persistent volume claim's storageClassName. Defaults to `default`.
+    ##
+    storageClassName: 'default'
+    accessMode: 'ReadWriteOnce'
+
+  ## Select node(s) to deploy to matching one specific label name and one or
+  ## more values
+  ##
+  affinity: {}
+  #    nodeAffinity:
+  #      requiredDuringSchedulingIgnoredDuringExecution:
+  #        nodeSelectorTerms:
+  #        - matchExpressions:
+  #          - key: 'k3s.io/hostname'
+  #            operator: In
+  #            values:
+  #            - 'k3s-agent-1.example.com'
+
+  ## The port PostgreSQL listens on. The default is `5432`.
+  ##
+  port: 5432
+
+  db:
+
+    ## Database to store.  Default is `gitlabhq_production`.
+    ##
+    name: 'gitlabhq_production'
+
+    ## The PostgreSQL database user. Default is `gitlab`.
+    ##
+    user: 'gitlab'
+
+    ## The PostgreSQL database user's password.  Default is `password`.
+    ##
+    pass: 'password'
+
+    ## A comma separated list of modules to specify.
+    ## See [postgres contrib module](http://www.postgresql.org/docs/9.4/static/contrib.html).
+    ## The default is `pg_trgm`.
+    extension: 'pg_trgm,btree_gist'
+
+gitlab:
+
+  ## Gitlab container image.
+  ##
+  image:
+    repository: 'registry.kubeoperator.io:8082/sameersbn/gitlab'
+    tag: '15.0.3'
+    pullPolicy: 'IfNotPresent'
+
+  service:
+    type: NodePort
+    http:
+      port: 80
+    ssh: 
+      port: 22
+
+  ingress:
+    enabled: false
+    annotations:
+    # traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # traefik.ingress.kubernetes.io/router.tls: 'true'
+    hosts:
+      - host: gitlab.example.com
+        paths:
+          -  "/"
+    tls: []
+
+  persistence:
+    ## Volume used to store GitLab data. Default is boolean `false`.
+    ##
+    data:
+      enabled: false
+      size: '10Gi'
+      ## Sets persistent volume claim's storageClassName. Defaults to `default`.
+      ##
+      storageClassName: 'default'
+      accessMode: 'ReadWriteOnce'
+
+  ## Extra annotations to the GitLab pods
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  ## Set the resource limits for GitLab
+  ## Normally this would be user defined, but GitLab is beefy and needs this to work.
+  resources:
+    limits:
+      cpu: '2'
+      memory: '4Gi'
+    requests:
+      cpu: '500m'
+      memory: '1Gi'
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  ## Select node(s) to deploy to matching one specific label name and one or
+  ## more values
+  ##
+  affinity: {}
+  #    nodeAffinity:
+  #      requiredDuringSchedulingIgnoredDuringExecution:
+  #        nodeSelectorTerms:
+  #        - matchExpressions:
+  #          - key: 'k3s.io/hostname'
+  #            operator: In
+  #            values:
+  #            - 'k3s-agent-1.example.com'
+
+  livenessProbe:
+    tcpSocket:
+      port: 80
+    initialDelaySeconds: 180
+    periodSeconds: 10
+    timeoutSeconds: 15
+    failureThreshold: 3
+        
+  readinessProbe:
+    tcpSocket:
+      port: 80
+    initialDelaySeconds: 180
+    periodSeconds: 10
+    timeoutSeconds: 15
+    failureThreshold: 3
+
+  ## All the values are environmental and must all be strings
+  env:
+
+    ## Set this to `true` to enable entrypoint debugging. Default is `false`.
+    ##
+    debug: 'false'
+
+    ## The hostname of the GitLab server. Defaults to `localhost`.
+    ##
+    host: 'gitlab.kubeoperator.io'
+
+    ## If you are migrating from GitLab CI use this parameter to configure the
+    ## redirection to the GitLab service so that your existing runners continue
+    ## to work without any changes. No defaults.
+    ##
+    ciHost: ''
+
+    ## The port of the GitLab server. This value indicates the public port on
+    ## which the GitLab application will be accessible on the network and
+    ## appropriately configures GitLab to generate the correct urls. It does
+    ## not affect the port on which the internal nginx server will be listening
+    ## on. Defaults to `443` if `{{ .Values.gitlab.env.https }}=true`, else defaults
+    ## to `80`.
+    ##
+    port: ''
+
+    secrets:
+      ## Encryption key for GitLab CI secret variables, as well as import
+      ## credentials, in the database. Ensure that your key is at least 32
+      ## characters long and that you don't lose it. You can generate one using
+      ## `pwgen -Bsv1 64`. If you are migrating from GitLab CI, you need to set
+      ## this value to the value of `GITLAB_CI_SECRETS_DB_KEY_BASE`. No defaults.
+      ##
+      dbKeyBase: 'PRpJdTLFqTVKgfCwprqRWgrMqpNMVcVHpNk4JWqVpW4nfnhMtLHjcnsxzkthb3Wn'
+
+      ## Encryption key for session secrets. Ensure that your key is at least 64
+      ## characters long and that you don't lose it. This secret can be rotated
+      ## with minimal impact - the main effect is that previously-sent password
+      ## reset emails will no longer work. You can generate one using
+      ## `pwgen -Bsv1 64`. No defaults.
+      ##
+      secretKeyBase: 'PRpJdTLFqTVKgfCwprqRWgrMqpNMVcVHpNk4JWqVpW4nfnhMtLHjcnsxzkthb3Wn'
+
+      ## Encryption key for OTP related stuff with  GitLab. Ensure that your key
+      ## is at least 64 characters long and that you don't lose it. **If you
+      ## lose or change this secret, 2FA will stop working for all users.**
+      ## You can generate one using `pwgen -Bsv1 64`. No defaults.
+      ##
+      otpKeyBase: 'PRpJdTLFqTVKgfCwprqRWgrMqpNMVcVHpNk4JWqVpW4nfnhMtLHjcnsxzkthb3Wn'
+
+    ## Configure the timezone for the gitlab application. This configuration
+    ## does not effect cron jobs. Defaults to `UTC`. See the list of
+    ## [acceptable values](http://api.rubyonrails.org/classes/ActiveSupport/TimeZone.html).
+    ##
+    tz: 'Asia/Shanghai'
+    timezone: 'Beijing'
+
+    ## The password for the root user on firstrun. Defaults to `5iveL!fe`.
+    ## GitLab requires this to be at least **8 characters long**.
+    ##
+    rootPassword: 'KubeOperator@2019'
+
+    ## The email for the root user on firstrun. Defaults to `admin@example.com`
+    ##
+    rootEmail: 'admin@example.com'
+
+    email:
+      ## The email address for the GitLab server. Defaults to value of
+      ## `{{ .Values.gitlab.env.smtpUser }}`, else defaults to `example@example.com`.
+      ##
+      address: 'example@example.com'
+
+      ## The name displayed in emails sent out by the GitLab mailer. Defaults to
+      ## `GitLab`.
+      ##
+      displayName: 'GitLab'
+
+      ## The reply-to address of emails sent out by GitLab. Defaults to value of
+      ## `{{ .Values.gitlab.env.email.address }}`, else defaults to
+      ## `noreply@example.com`.
+      ##
+      replyTo: 'noreply@example.com'
+
+      ## The e-mail subject suffix used in e-mails sent by GitLab. No defaults.
+      ##
+      subjectSuffix: ''
+
+      ## Enable or disable gitlab mailer. Defaults to the `smtpEnabled`
+      ## configuration.
+      enabled: ''
+
+      smime:
+        ## Enable or disable email S/MIME signing. Defaults is `false`.
+        ##
+        enable: 'false'
+
+        ## Specifies the path to a S/MIME private key file in PEM format,
+        ## unencrypted. Defaults to ``.
+        ##
+        keyFile: ''
+
+        ## Specifies the path to a S/MIME public certificate key in PEM format.
+        ## Defaults to ``.
+        ##
+        certFile: ''
+
+    ## Default theme ID, by default 2. (1 - Indigo, 2 - Dark, 3 - Light, 4 - Blue,
+    ## 5 - Green, 6 - Light Indigo, 7 - Light Blue, 8 - Light Green, 9 - Red,
+    ## 10 - Light Red).
+    ##
+    defaultTheme: '2'
+
+    incomingEmail:
+
+      ## The incoming email address for reply by email. Defaults to the value of
+      ## `imapUser`, else defaults to `reply@example.com`. Please read the
+      ## [reply by email](http://doc.gitlab.com/ce/incoming_email/README.html)
+      ## documentation to currently set this parameter.
+      address: 'reply@example.com'
+
+      ## Enable or disable gitlab reply by email feature. Defaults to the value
+      ## of `gitlab.imap.enabled`.
+      enabled: ''
+
+    ## Enable or disable user signups (first run only). Default is `true`.
+    ##
+    signupEnabled: 'true'
+
+    ## Enable or disable impersonation. Defaults to `true`.
+    impersonationEnabled: 'true'
+
+    ##  Enable or disable ability for users to change their username. Defaults to
+    ## `true`.
+    ##
+    usernameChange: 'true'
+
+    ## Enable or disable ability for users to create groups. Defaults to `true`.
+    ##
+    createGroup: 'true'
+
+    projects:
+
+      ## Set default projects limit. Defaults to `100`.
+      ##
+      limit: '100'
+
+      ## Set if *issues* feature should be enabled by default for new projects.
+      ## Defaults to `true`.
+      ##
+      issues: 'true'
+
+      ## Set if *merge requests* feature should be enabled by default for new
+      ## projects. Defaults to `true`.
+      ##
+      mergeRequests: 'true'
+
+      ## Set if *wiki* feature should be enabled by default for new projects.
+      ## Defaults to `true`.
+      wiki: 'true'
+
+      ## Set if *snippets* feature should be enabled by default for new projects.
+      ## Defaults to `false`.
+      snippets: 'false'
+
+      ## Set if *builds* feature should be enabled by default for new projects.
+      ## Defaults to `true`.
+      builds: 'true'
+
+      ## Set if *container_registry* feature should be enabled by default for
+      ## new projects. Defaults to `true`.
+      containerRegsitry: 'true'
+
+    ## Sets the timeout for webhooks. Defaults to `10` seconds.
+    ##
+    webhookTimeout: '10'
+
+    ## Enable or disable broken build notification emails. Defaults to `true`.
+    ##
+    notifyOnBrokenBuilds: 'true'
+
+    ## Add pusher to recipients list of broken build notification emails.
+    ## Defaults to `false`.
+    ##
+    notifyPusher: 'false'
+
+    ## The git repositories folder in the container. Defaults to
+    ## `/home/git/data/repositories`.
+    ##
+    reposDir: /home/git/data/repositories
+
+    backup:
+
+      ## The backup folder in the container. Defaults to
+      ## `/home/git/data/backups`.
+      ##
+      dir: /home/git/data/backups
+
+      ##  Optionally change ownership of backup files on start-up. Defaults to
+      ## `true`.
+      ##
+      dirChown: 'true'
+
+      ## Optionally group backups into a subfolder. Can also be used to place
+      ## backups in to a subfolder on remote storage. Not used by default.
+      dirGroup: ''
+
+      ## Setup cron job to automatic backups. Possible values `disable`,
+      ## `daily`, `weekly` or `monthly`. Disabled by default.
+      ##
+      schedule: 'disable'
+
+      ## Configure how long (in seconds) to keep backups before they are deleted.
+      ## By default when automated backups are disabled backups are kept forever
+      ## (0 seconds), else the backups expire in 7 days (604800 seconds).
+      ##
+      expiry: ''
+
+      ## Specify the PostgreSQL schema for the backups. No defaults, which means
+      ## that all schemas will be backed up. see #524
+      ##
+      pgSchema: ''
+
+      ## Sets the permissions of the backup archives. Defaults to `0600`.
+      ## [See](http://doc.gitlab.com/ce/raketasks/backup_restore.html#backup-archive-permissions)
+      ##
+      archivePermissions: '0600'
+
+      ## Set a time for the automatic backups in `HH:MM` format.
+      ## Defaults to `04:00`.
+      ##
+      time: '04:00'
+
+      ## Specified sections are skipped by the backups. Defaults to empty, i.e.
+      ## `lfs,uploads`. [See](http://doc.gitlab.com/ce/raketasks/backup_restore.html#create-a-backup-of-the-gitlab-system)
+      ##
+      skip: ''
+
+    ## The build traces directory. Defaults to `/home/git/data/builds`.
+    ##
+    buildsDir: '/home/git/data/builds'
+
+    ## The repository downloads directory. A temporary zip is created in this
+    ## directory when users click **Download Zip** on a project. Defaults to
+    ## `/home/git/data/tmp/downloads`.
+    ##
+    downloadsDir: '/home/git/data/tmp/downloads'
+
+    ## The directory to store the build artifacts. Defaults to
+    ## `/home/git/data/shared`.
+    ##
+    sharedDir: '/home/git/data/share'
+
+    artifacts:
+
+      ## Enable/Disable GitLab artifacts support. Defaults to `true`.
+      ##
+      enabled: 'true'
+
+      ## Directory to store the artifacts. Defaults to
+      ## `{{ .Values.gitlab.env.sharedDir }}/artifacts`.
+      ##
+      dir: ''
+
+    ## Default AWS access key to be used for object store. Defaults to
+    ## `AWS_ACCESS_KEY_ID`.
+    ##
+    awsAccessKeyId: 'AWS_ACCESS_KEY_ID'
+
+    ## Default AWS access key to be used for object store. Defaults to
+    ## `AWS_SECRET_ACCESS_KEY`.
+    ##
+    awsSecretAccessKey: 'AWS_SECRET_ACCESS_KEY'
+
+    objectStoreConnection:
+
+      google:
+
+        ## Default Google project to use for Object Store.
+        ##
+        project: ''
+
+        ## Default Google service account email to use for Object Store.
+        ##
+        clientEmail: ''
+
+        ## Default Google key file Defaults to `/gcs/key.json`.
+        ##
+        jsonKeyLocation: '/gcs/key.json'
+
+      ##  Default object store connection provider. Defaults to `AWS`.
+      ##
+      provider: 'AWS'
+
+    artifactsObjectStore:
+
+      ## Enables Object Store for Artifacts that will be remote stored. Defaults
+      ## to `false`.
+      ##
+      enabled: 'false'
+
+      ## Bucket name to store the artifacts. Defaults to `artifacts`.
+      ##
+      remoteDirectory: ''
+
+      ## Set to true to enable direct upload of Artifacts without the need of
+      ## local shared storage. Defaults to `false`.
+      directUploud: 'false'
+
+      ## Temporary option to limit automatic upload. Defaults to `false`.
+      ##
+      backgroundUpload: 'false'
+
+      ## Passthrough all downloads via GitLab instead of using Redirects to
+      ## Object Storage. Defaults to `false`.
+      ##
+      proxyDownload: 'false'
+
+      connection:
+
+        ## Connection Provider for the Object Store. (`AWS` or `Google`).
+        ## Defaults to `{{ .Values.gitlab.env.objectStoreConnection.provider }}`.
+        ##
+        provider: ''
+
+        aws:
+          ## AWS Access Key ID for the Bucket. Defaults to
+          ## `{{ .Values.gitlab.env.awsAccessKeyId }}`.
+          ##
+          accessKeyId: ''
+
+          ## AWS Secret Access Key. Defaults to
+          ## `{{ .Values.gitlab.env.awsSecretAccessKey }}`.
+          ##
+          secretAccessKey: ''
+
+          ## AWS Region. Defaults to `us-east-1`.
+          ##
+          region: 'us-east-1'
+
+          ## Configure this for an compatible AWS host like minio. Defaults to
+          ## `s3.amazonaws.com`.
+          ##
+          host: 's3.amazonaws.com'
+
+          ## AWS Endpoint like `http://127.0.0.1:9000`. Defaults to `nil`.
+          ##
+          endpoint: ''
+
+          ## Changes AWS Path Style to 'host/bucket_name/object' instead of
+          ## 'bucket_name.host/object'. Defaults to `true`.
+          ##
+          pathStyle: 'true'
+
+        google:
+
+          ## Google project. Defaults to
+          ## `{{ .Values.gitlab.env.objectStore.connection.google.project }}`.
+          ##
+          project: ''
+
+          ## Google service account. Defaults to
+          ## `{{ .Values.gitlab.env.objectStore.connection.google.clientEmail }}`.
+          ##
+          clientEmail: ''
+
+          ## Default Google key file. Defaults to
+          ## `{{ .Values.gitlab.env.objectStore.connection.google.jsonKeyLocation }}`.
+          jsonKeyLocation: ''
+
+    ## Cron notation for the GitLab pipeline schedule worker. Defaults to
+    ## `'19 * * * *'`
+    ##
+    pipelineScheduleWorkerCron: '19 * * * *'
+
+    lfs:
+
+      ## Enable/Disable Git LFS support. Defaults to `true`.
+      ##
+      enabled: 'true'
+
+      ## Directory to store the lfs-objects. Defaults to
+      ## `{{ .Values.gitlab.env.sharedDir }}/lfs-objects`
+      ##
+      objectDir: ''
+
+      store:
+
+        ## Enables Object Store for LFS that will be remote stored.
+        ## Defaults to `false`.
+        ##
+        enabled: 'false'
+
+        ## Bucket name to store the LFS. Defaults to `lfs-object`.
+        ##
+        remoteDirectory: 'lfs-object'
+
+        ## Temporary option to limit automatic upload. Defaults to `false`.
+        ##
+        backgroundUpload: 'false'
+
+        ## Passthrough all downloads via GitLab instead of using Redirects to
+        ## Object Storage. Defaults to `false`.
+        ##
+        proxyDownload: 'false'
+
+        connection:
+
+          ## Connection Provider for the Object Store. (`AWS` or `Google`).
+          ## Defaults to `{{ .Values.gitlab.env.objectStore.connection.provider }}`
+          ## (`AWS`).
+          ##
+          provider: ''
+
+          aws:
+            ## AWS Access Key ID for the Bucket. Defaults to
+            ## `{{ .Values.gitlab.env.awsAccessKeyId }}`
+            ##
+            accessKeyID: ''
+
+            ## AWS Secret Access Key. Defaults to
+            ## `{{ .Values.gitlab.env.awsSecretAccessKey }}`.
+            ##
+            secretAccessKey: ''
+
+            ## AWS Region. Defaults to `us-east-1`.
+            ##
+            region: 'us-east-1'
+
+            ## Configure this for an compatible AWS host like minio.
+            ## Defaults to `s3.amazonaws.com`.
+            ##
+            host: 's3.amazonaws.com'
+
+            ## AWS Endpoint like `http://127.0.0.1:9000`. Defaults to `nil`.
+            ##
+            endpoint: 'nil'
+
+            ## Changes AWS Path Style to 'host/bucket_name/object' instead of
+            ## 'bucket_name.host/object'. Defaults to `true`.
+            ##
+            pathStyle: 'true'
+
+          google:
+
+            ## Google project. Defaults to
+            ## `{{ .Values.gitlab.env.objectStore.connection.google.project }}`.
+            ##
+            project: ''
+
+            ## Google service account. Defaults to
+            ## `{{ .Values.gitlab.env.objectStore.connection.clientEmail }}`
+            ##
+            clientEmail: ''
+
+            ## Default Google key file. Defaults to `
+            ## `{{ .Values.gitlab.env.objectStore.connection.google.jsonKeyLocation }}`
+            ## (`/gcs/key.json`).
+            ##
+            jsonKeyLocation: ''
+
+    uploads:
+
+      ## The location where uploads objects are stored. Defaults to
+      ## `{{ .Values.gitlab.env.sharedDir }}/public`
+      ##
+      storagePath: ''
+
+      ## Mapping for the `{{ .Values.gitlab.env.uploads.storagePath }}`.
+      ## Defaults to `uploads/-/system`
+      ##
+      baseDir: 'uploads/-/system'
+
+      objectStore:
+
+        ## Enables Object Store for UPLOADS that will be remote stored. Defaults
+        ## to `false`.
+        ##
+        enabled: 'false'
+
+        ## Bucket name to store the UPLOADS. Defaults to `uploads`.
+        ##
+        remoteDirectory: 'uploads'
+
+        ## Temporary option to limit automatic upload. Defaults to `false`.
+        ##
+        backgroundUpload: 'false'
+
+        ## Passthrough all downloads via GitLab instead of using Redirects to
+        ## Object Storage. Defaults to `false`.
+        proxyDownload: 'false'
+
+        connection:
+
+          ## Connection Provider for the Object Store. (`AWS` or `Google`).
+          ## Defaults to `{{ .Values.gitlab.env.objectStore.connection.provider }}`
+          ## (`AWS`).
+          provider: ''
+
+          aws:
+            ## AWS Access Key ID for the Bucket. Defaults to
+            ## `{{ .Values.gitlab.env.awsAccessKeyId }}`.
+            ##
+            accessKeyID: ''
+
+            ## AWS Secret Access Key.
+            ## Defaults to `{{ .Values.gitlab.env.awsSecretAccessKey }}`/
+            ##
+            secretAccessKey: ''
+
+            ## AWS Region. Defaults to `us-east-1`.
+            ##
+            region: 'us-east-1'
+
+            ## Configure this for an compatible AWS host like minio.
+            ## Defaults to `s3.amazonaws.com`.
+            ##
+            host: 's3.amazonaws.com'
+
+            ## AWS Endpoint like `http://127.0.0.1:9000`. Defaults to `nil`.
+            ##
+            endpoint: 'nil'
+
+            ## Changes AWS Path Style to 'host/bucket_name/object' instead of
+            ## 'bucket_name.host/object'. Defaults to `true`.
+            ##
+            pathStyle: 'true'
+
+          google:
+
+            ## Google project. Defaults to
+            ## `{{ .Values.gitlab.env.objectStore.connection.google.project }}`.
+            ##
+            project: ''
+
+            ## Google service account. Defaults to
+            ## `{{ .Values.gitlab.env.objectStore.connection.clientEmail }}`.
+            ##
+            clientEmail: ''
+
+            ## Default Google key file. Defaults to
+            ## `{{ .Values.gitlab.env.objectStore.connection.google.jsonKeyLocation }}`
+            ## (`/gcs/key.json`).
+            ##
+            jsonKeyLocation: ''
+
+    mattermost:
+
+      ## Enable/Disable GitLab Mattermost for *Add Mattermost button*.
+      ## Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## Sets Mattermost URL. Defaults to `https://mattermost.example.com`.
+      ##
+      url: 'https://mattermost.example.com'
+
+    ssh:
+
+      ## The ssh host. Defaults to **{{ .Values.gitlab.env.host }}**.
+      ##
+      host: ''
+
+      ##  The ssh port for SSHD to listen on. Defaults to `22`.
+      ##
+      listenPort: '22'
+
+      ## The ssh "MaxStartups" parameter, defaults to `10:30:60`.
+      ##
+      maxstartups: '10:30:60'
+
+      ## The ssh port number. Defaults to `{{ .Values.gitlab.env.ssh.listenPort }}`.
+      ##
+      port: ''
+
+    ## The relative url of the GitLab server, e.g. `/git`. No default.
+    ##
+    relativeUrlRoot: ''
+
+    ## Add IP address reverse proxy to trusted proxy list, otherwise users will
+    ## appear signed in from that address. Currently only a single entry is
+    ## permitted. No defaults.
+    ##
+    trustedProxies: ''
+
+    registry:
+
+      ## Enables the GitLab Container Registry. Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## Sets the GitLab Registry Host. Defaults to `registry.example.com`.
+      ##
+      host: 'registry.example.com'
+
+      ## Sets the GitLab Registry Port. Defaults to `443`.
+      ##
+      port: '443'
+
+      ## Sets the GitLab Registry API URL. Defaults to `http://localhost:5000`
+      ##
+      apiUrl: 'http://localhost:5000'
+
+      ## Sets the GitLab Registry Key Path. Defaults to `config/registry.key`.
+      ##
+      keyPath: 'config/registry.key'
+
+      ## Directory to store the container images will be shared with registry.
+      ## Defaults to `{{ .Values.gitlab.env.sharedDir }}/registry`.
+      dir: ''
+
+      ## Sets the GitLab Registry Issuer. Defaults to `gitlab-issuer`.
+      ##
+      issuer: 'gitlab-issuer'
+
+      ## Set to `true` to generate SSL internal Registry keys. Used to
+      ## communicate between a Docker Registry and GitLab. It will generate a
+      ## self-signed certificate key at the location given by
+      ## `{{ .Values.gitlab.env.registry.keyPath }}`, e.g. `/certs/registry.key`.
+      ## And will generate the certificate file at the same location, with the
+      ## same name, but changing the extension from `key` to `crt`, e.g.
+      ## `/certs/registry.crt`
+      ##
+      generateInternalCertificates: 'false'
+
+    pages:
+
+      ## Enables the GitLab Pages. Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## Sets the GitLab Pages Domain. Defaults to `example.com`.
+      ##
+      domain: 'example.com'
+
+      ## Sets GitLab Pages directory where all pages will be stored. Defaults to
+      ## `{{ .Values.gitlab.env.sharedDir }}/pages`.
+      dir: ''
+
+      ## Sets GitLab Pages Port that will be used in NGINX. Defaults to `80`.
+      ##
+      port: '80'
+
+      ## Sets GitLab Pages to HTTPS and the gitlab-pages-ssl config will be used.
+      ## Defaults to `false`.
+      ##
+      https: 'false'
+
+      ## Set to `true` to enable pages artifactsserver, enabled by default.
+      ##
+      artifactsServer: 'true'
+
+      ## Sets GitLab Pages external http to receive request on an independent
+      ## port. Disabled by default.
+      ##
+      externalHttp: ''
+
+      ## Sets GitLab Pages external https to receive request on an independent
+      ## port. Disabled by default.
+      ##
+      externalHttps: ''
+
+      ## Set to `true` to enable access control for pages. Allows access to a
+      ## Pages site to be controlled based on a user’s membership to that
+      ## project. Disabled by default ( `false`).
+      ##
+      accessControl: 'false'
+
+      ## Disable the nginx proxy for gitlab pages, defaults to `true`. When set
+      ## to `false` this will turn off the nginx proxy to the gitlab pages
+      ## daemon, used when the user provides their own http load balancer in
+      ## combination with a gitlab pages custom domain setup.
+      ##
+      nginxProxy: 'true'
+
+      access:
+
+        ## Secret Hash, minimal 32 characters, if omitted, it will be auto
+        ## generated.
+        secret: ''
+
+        ## Gitlab instance URI, example: `https://gitlab.example.io`.
+        ##
+        controlServer: ''
+
+        client:
+
+          ## Client ID from earlier generated OAuth application.
+          ##
+          id: ''
+
+          ## Client Secret from earlier genereated OAuth application.
+          ##
+          secret: ''
+
+        ## Redirect URI, non existing pages domain to redirect to pages daemon,
+        ## `https://projects.example.io/auth`.
+        ##
+        redirectUri: ''
+
+    ## Set to `true` to enable https support, disabled by default.
+    ##
+    https: 'false'
+
+    gitaly:
+
+      ## Set default path for gitaly. defaults to `/home/git/gitaly`.
+      ##
+      clientPath: '/home/git/gitaly'
+
+      ## Set a gitaly token, blank by default.
+      ##
+      token: ''
+
+    monitoring:
+
+      ## Time between sampling of unicorn socket metrics, in seconds, defaults
+      ## to `10`.
+      unicornSamplerInterval: '10'
+
+      ## IP whitelist to access monitoring endpoints, defaults to `0.0.0.0/8`.
+      ##
+      ipWhitelist: '0.0.0.0/8'
+
+      sidekiqExporter:
+
+        ## Set to `true` to enable the sidekiq exporter, enabled by default.
+        ##
+        enabled: 'true'
+
+        ## Sidekiq exporter address, defaults to `0.0.0.0`.
+        ##
+        address: '0.0.0.0'
+
+        ## Sidekiq exporter port, defaults to `3807`.
+        ##
+        port: '3807'
+
+    ssl:
+
+      ## Set to `true` when using self signed ssl certificates. `false` by
+      ## default.
+      ##
+      selfSigned: 'false'
+
+      ## Location of the ssl certificate. Defaults to
+      ## `/home/git/data/certs/gitlab.crt`.
+      ##
+      certificatePath: '/home/git/data/certs/gitlab.crt'
+
+      ## Location of the ssl private key. Defaults to
+      ## `/home/git/data/certs/gitlab.key`.
+      ##
+      keyPath: '/home/git/data/certs/gitlab.key'
+
+      ## Location of the ssl private key. Defaults to
+      ## `/home/git/data/certs/gitlab.key`.
+      ##
+      keyPath: '/home/git/data/certs/gitlab.key'
+
+      ## Location of the dhparam file. Defaults to
+      ## `/home/git/data/certs/dhparam.pem`.
+      ##
+      dhparamPath: '/home/git/data/certs/dhparam.pem'
+
+      ## Enable verification of client certificates using the
+      ## `{{ .Values.gitlab.env.ssl.caCertificatesPath }}` file or setting this
+      ## variable to `on`. Defaults to `off`.
+      ##
+      verifyClient: 'off'
+
+      ## List of SSL certificates to trust. Defaults to
+      ## `/home/git/data/certs/ca.crt`.
+      ##
+      caCertificatesPath: '/home/git/data/certs/ca.crt'
+
+      registry:
+
+        ## Location of the ssl private key for gitlab container registry.
+        ## Defaults to `/home/git/data/certs/registry.key`.
+        ##
+        keyPath: '/home/git/data/certs/registry.key'
+
+        ## Location of the ssl certificate for the gitlab container registry.
+        ## Defaults to `/home/git/data/certs/registry.crt`.
+        ##
+        certPath: '/home/git/data/certs/registry.crt'
+
+      pages:
+
+        ## Location of the ssl private key for gitlab pages. Defaults to
+        ## `/home/git/data/certs/pages.key`.
+        keyPath: '/home/git/data/certs/pages.key'
+
+        ## Location of the ssl certificate for the gitlab pages Defaults to
+        ## `/home/git/data/certs/pages.crt`.
+        ##
+        certPath: '/home/git/data/certs/pages.crt'
+
+      ## List of supported SSL ciphers: Defaults to `ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4`.
+      ##
+      ciphers: 'ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4'
+
+    nginx:
+
+      ## The number of nginx workers to start. Defaults to `1`.
+      ##
+      workers: '1'
+
+      ## Sets the bucket size for the server names hash tables. This is needed
+      ## when you have long server_names or your an error message from nginx like
+      ## *nginx: [emerg] could not build server_names_hash, you should increase
+      ## server_names_hash_bucket_size:..*. It should be only increment by a power
+      ## of 2. Defaults to `32`.
+      ##
+      serverNamesHashBucketSize: '32'
+
+      hsts:
+
+        ## Advanced configuration option for turning off the HSTS configuration.
+        ## Applicable only when SSL is in use. Defaults to `true`. See
+        ## [#138](https://github.com/sameersbn/docker-gitlab/issues/138) for use
+        ## case scenario.
+        ##
+        enabled: 'true'
+
+        ## Advanced configuration option for setting the HSTS max-age in the
+        ## gitlab nginx vHost configuration. Applicable only when SSL is in use.
+        ## Defaults to `31536000`.
+        ##
+        maxage: '31536000'
+
+      ## Enable `proxy_buffering`. Defaults to `off`.
+      ##
+      proxyBuffering: 'off'
+
+      ## Enable `X-Accel-Buffering` header. Default to `no`.
+      ##
+      accelBuffering: 'no'
+
+      ##  Advanced configuration option for the `proxy_set_header
+      ## X-Forwarded-Proto` setting in the gitlab nginx vHost configuration.
+      ## Defaults to `https` when `{{ .Values.gitlab.env.https }}` is `true` else
+      ## defaults to `{{ .Values.gitlab.env.scheme }}`.
+      ##
+      xForwardingProto: ''
+
+      ## Set to `on` if docker container runs behind a reverse proxy, you may
+      ## not want the IP address of the proxy to show up as the client address.
+      ## Default is `off`.
+      ##
+      realIpRecursive: 'off'
+
+      ## You can have NGINX look for a different address to use by adding your
+      ## reverse proxy to the `{{ .Values.gitlab.env.nginx.realIpTrustedAddresses }}`.
+      ## Currently only a single entry is permitted. No defaults.
+      ##
+      realIpTrustedAddresses: ''
+
+    redis:
+
+      ## The database server hostname. GitLab will be wired to the postgresql pod if
+      ## `{{ .Values.redis.enabled }}` is `true`.  Otherwise, GitLab will connect
+      ## to the value provided.  Defaults to not being set.
+      ##
+      host: ''
+
+      ## The connection port of the redis server. Defaults to `6379`.
+      ##
+      port: '6379'
+
+      ## The redis database number. Defaults to '0'.
+      ##
+      dbNumber: '0'
+
+    puma:
+
+      ## The number of puma workers to start. Defaults to `3`.
+      ##
+      workers: '3'
+
+      ## Sets the timeout of puma worker processes. Defaults to `60` seconds.
+      ##
+      timeout: '60'
+
+      threads:
+
+        ## The number of puma minimum threads. Defaults to `1`.
+        ##
+        min: '1'
+
+        ## The number of puma maximum threads. Defaults to `16`.
+        ##
+        max: '16'
+
+      ##  Maximum memory size of per puma worker process. Defaults to `850`.
+      ##
+      perWorkerMaxMemoryMb: '850'
+
+      ## Maximum memory size of puma master process. Defaults to `550`.
+      ##
+      masterMaxMemoryMb: '550'
+
+    sidekiq:
+
+      ## The number of concurrent sidekiq jobs to run. Defaults to `25`.
+      ##
+      concurrency: '25'
+
+      ## Timeout for sidekiq shutdown. Defaults to `4`.
+      ##
+      shutdownTimeout: '4'
+
+      ## Non-zero value enables the SidekiqMemoryKiller. Defaults to `1000000`.
+      ## For additional options refer [Configuring the MemoryKiller](http://doc.gitlab.com/ce/operations/sidekiq_memory_killer.html).
+      ##
+      memoryKillerMaxRss: '1000000'
+
+      ## Sidekiq log format that will be used. Defaults to `json`.
+      ##
+      ## TODO: was `GITLAB_SIDEKIQ_LOG_FORMAT`
+      logFormat: 'json'
+
+    db:
+
+      ## The database type. Currently only `postgresql` is only supported.
+      ##
+      adapter: 'postgresql'
+
+      ## The database encoding. Defaults to `utf8`.
+      ##
+      encoding: 'utf8'
+
+      ## The database server hostname. GitLab will be wired to the postgresql pod if
+      ## `{{ .Values.postgresql.enabled }}` is `true`.  Otherwise, GitLab will connect
+      ## to the value provided.  Defaults to not being set.
+      ##
+      host: ''
+
+      ## The database server port. Defaults to `5432` for postgresql.
+      ##
+      port: '5432'
+
+      ## The database database name. Defaults to `gitlabhq_production`.
+      ##
+      name: 'gitlabhq_production'
+
+      ## The database database user. Defaults to `gitlab`.
+      ##
+      user: 'gitlab'
+
+      ## The database database password. Defaults to `password`.
+      ##
+      pass: 'password'
+
+      ## The database database connection pool count. Defaults to `10`.
+      ##
+      pool: '10'
+
+      ## Whether use database prepared statements. Defaults to `true`.
+      ## Set to `false` if you want to use with [PgBouncer](https://pgbouncer.github.io/).
+      ##
+      preparedStatements: 'true'
+
+    smtp:
+
+      ## Enable mail delivery via SMTP. Defaults to `true` if
+      ## `{{ .Values.gitlab.env.smtpUser }}` is defined, else defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## SMTP domain. Defaults to `www.gmail.com`.
+      ##
+      domain: 'www.gmail.com'
+
+      ## SMTP server host. Defaults to `smtp.gmail.com`.
+      ##
+      host: 'smtp.gmail.com'
+
+      ## SMTP server port. Defaults to `587`.
+      ##
+      port: '587'
+
+      ## SMTP username.
+      ##
+      user: ''
+
+      ## SMTP password.
+      ##
+      password: ''
+
+      ## Enable STARTTLS. Defaults to `true`.
+      ##
+      startTls: 'true'
+
+      ## Enable SSL/TLS. Defaults to `false`.
+      ##
+      tls: 'false'
+
+      ## SMTP openssl verification mode. Accepted values are `none`, `peer`,
+      ## `client_once` and `fail_if_no_peer_cert`. Defaults to `none`.
+      ##
+      openSslVerifyMode: 'none'
+
+      ## Specify the SMTP authentication method. Defaults to `login` if
+      ## `{{ .Values.gitlab.env.smtpUser }}` is set.
+      ##
+      authentication: ''
+
+      ## Enable custom CA certificates for SMTP email configuration. Defaults to
+      ## `false`.
+      ##
+      caEnabled: 'false'
+
+      ## Specify the `ca_path` parameter for SMTP email configuration. Defaults
+      ## to `/home/git/data/certs`.
+      ##
+      caPath: '/home/git/data/certs'
+
+      ## Specify the `ca_file` parameter for SMTP email configuration. Defaults
+      ## to `/home/git/data/certs/ca.crt`.
+      ##
+      caFile: '/home/git/data/certs/ca.crt'
+
+    imap:
+
+      ## Enable mail delivery via IMAP. Defaults to `true` if
+      ## `{{ .Values.gitlab.env.imap.user }}` is  defined, else defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## IMAP server host. Defaults to `imap.gmail.com`.
+      ##
+      host: 'imap.gmail.com'
+
+      ## IMAP server port. Defaults to `993`.
+      ##
+      port: '993'
+
+      ## IMAP username.
+      ##
+      user: ''
+
+      ## IMAP password.
+      ##
+      pass: ''
+
+      ## Enable SSL. Defaults to `true`.
+      ##
+      ssl: 'true'
+
+      ## Enable STARTSSL. Defaults to `false`.
+      ##
+      startTls: 'false'
+
+      ## The name of the mailbox where incoming mail will end up. Defaults to
+      ## `inbox`.
+      ##
+      mailbox: 'inbox'
+
+    ldap:
+
+      ## Enable LDAP. Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## Label to show on login tab for LDAP server. Defaults to 'LDAP'.
+      ##
+      label: 'LDAP'
+
+      ## LDAP Host
+      ##
+      host: ''
+
+      ## LDAP Port. Defaults to `389`.
+      ##
+      port: '389'
+
+      ## LDAP UID. Defaults to `sAMAccountName`.
+      ##
+      uid: 'sAMAccountName'
+
+      ## LDAP method, Possible values are `simple_tls`, `start_tls` and `plain`.
+      ## Defaults to `plain`.
+      ##
+      method: 'plain'
+
+      ## LDAP verify ssl certificate for installations that are using
+      ## `{{ if eq .Values.gitlab.env.ldap.method "simple_tls" }}` or
+      ## `{{ if eq .Values.gitlab.env.ldap.method "start_tls" }}`.
+      ## Defaults to `true`.
+      ##
+      verrifySsl: 'true'
+
+      ## Specifies the path to a file containing a PEM-format CA certificate.
+      ## Defaults to ``.
+      ##
+      caFile: ''
+
+      ## Specifies the SSL version for OpenSSL to use, if the OpenSSL default is
+      ## not appropriate. Example: `TLSv1_1`. Defaults to ``.
+      ##
+      sslVersion: ''
+
+      ## No default.
+      ##
+      bindDn: ''
+
+      ## LDAP password.
+      ##
+      pass: ''
+
+      ## Timeout, in seconds, for LDAP queries. Defaults to `10`.
+      ##
+      timeout: '10'
+
+      ## Specifies if LDAP server is Active Directory LDAP server. If your LDAP
+      ## server is not AD, set this to `false`. Defaults to `true`.
+      ##
+      activeDirectory: 'true'
+
+      ## If enabled, GitLab will ignore everything after the first '@' in the
+      ## LDAP username submitted by the user on login. Defaults to `false` if
+      ## `{{ .Values.gitlab.env.ldap.uid }}` is `userPrincipalName` else `true`.
+      ##
+      allowUsernameOrEmailLogin: ''
+
+      ## Locks down those users until they have been cleared by the admin.
+      ## Defaults to `false`.
+      ##
+      blockAutoCreatedUsers: 'false'
+
+      ## Base where we can search for users. No default.
+      ##
+      base: ''
+
+      user:
+
+        ## Filter LDAP users. No default.
+        ##
+        filter: ''
+
+        attribute:
+
+          ## Attribute fields for the identification of a user. Default to
+          ## `['uid', 'userid', 'sAMAccountName']`.
+          ##
+          username: "['uid', 'userid', 'sAMAccountName']"
+
+          ## Attribute fields for the shown mail address. Default to
+          ## `['mail', 'email', 'userPrincipalName']`.
+          ##
+          mail: "['mail', 'email', 'userPrincipalName']"
+
+          ## Attribute field for the used username of a user. Default to `cn`.
+          ##
+          name: 'cn'
+
+          ## Attribute field for the forename of a user. Default to `givenName`.
+          ##
+          firstname: 'givenName'
+
+          ## Attribute field for the surname of a user. Default to `sn`.
+          ##
+          lastname: 'sn'
+
+      ## GitLab will lower case the username for the LDAP Server. Defaults to
+      ## `false`.
+      lowercaseUsernames: 'false'
+
+    oauth:
+
+      ## Enable OAuth support. Defaults to `true` if any of the support OAuth
+      ## providers is configured, else defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## Automatically sign in with a specific OAuth provider without showing
+      ## GitLab sign-in page. Accepted values are `cas3`, `github`, `bitbucket`,
+      ## `gitlab`, `google_oauth2`, `facebook`, `twitter`, `saml`, `crowd`,
+      ## `auth0` and `azure_oauth2`. No default.
+      autoSignInWithProvider: ''
+
+      ## Comma separated list of oauth providers for single sign-on. This allows
+      ## users to login without having a user account. The account is created
+      ## automatically when authentication is successful. Accepted values are
+      ## `cas3`, `github`, `bitbucket`, `gitlab`, `google_oauth2`, `facebook`,
+      ## `twitter`, `saml`, `crowd`, `auth0` and `azure_oauth2`. No default.
+      ##
+      allowSSO: ''
+
+      ## Locks down those users until they have been cleared by the admin.
+      ## Defaults to `true`.
+      ##
+      blockAutoCreatedUsers: 'true'
+
+      ## Look up new users in LDAP servers. If a match is found (same uid),
+      ## automatically link the omniauth identity with the LDAP account.
+      ## Defaults to `false`.
+      ##
+      autoLinkLdapUser: 'false'
+
+      ## Allow users with existing accounts to login and auto link their account
+      ## via SAML login, without having to do a manual login first and manually
+      ## add SAML. Defaults to `false`.
+      autoLinkSamlUser: 'false'
+
+      ## Comma separated list if oauth providers to disallow access to `internal`
+      ## projects. Users creating accounts via these providers will have access
+      ## internal projects. Accepted values are `cas3`, `github`, `bitbucket`,
+      ## `gitlab`, `google_oauth2`, `facebook`, `twitter`, `saml`, `crowd`,
+      ## `auth0` and `azure_oauth2`. No default.
+      externalProviders: ''
+
+      cas3:
+
+        ##  The "Sign in with" button label. Defaults to "cas3".
+        ##
+        label: 'cas3'
+
+        ## CAS3 server URL. No defaults.
+        ##
+        server: ''
+
+        ## Disable CAS3 SSL verification. Defaults to `false`.
+        ##
+        disableSslVerification: 'false'
+
+        ## CAS3 login URL. Defaults to `/cas/login`.
+        ##
+        loginUrl: '/cas/login'
+
+        ## CAS3 validation URL. Defaults to `/cas/p3/serviceValidate`.
+        ##
+        validateUrL: '/cas/p3/serviceValidate'
+
+        ## CAS3 logout URL. Defaults to `/cas/logout`.
+        ##
+        logoutUrl: '/cas/logout'
+
+      google:
+
+        ## Google App Client ID. No defaults.
+        ##
+        apiKey: ''
+
+        ## Google App Client Secret. No defaults.
+        ##
+        appSecret: ''
+
+        ## List of Google App restricted domains. Value is comma separated list
+        ## of single quoted groups. Example: `'example.com','example2.com'`.
+        ## No defaults.
+        ##
+        restrictDomain: ''
+
+      facebook:
+
+        ## Facebook App API key. No defaults.
+        ##
+        apiKey: ''
+
+        ## Facebook App API secret. No defaults.
+        ##
+        appSecret: ''
+
+      twitter:
+
+        ## Twitter App API key. No defaults.
+        ##
+        apiKey: ''
+
+        ## Twitter App API secret. No defaults.
+        ##
+        appSecret: ''
+
+      authentiq:
+
+        client:
+
+          ## authentiq Client ID. No defaults.
+          ##
+          id: ''
+
+          ## authentiq Client secret. No defaults.
+          ##
+          secret: ''
+
+        ## Scope of Authentiq Application Defaults to
+        ## `'aq:name email~rs address aq:push'`
+        ##
+        scope: 'aq:name email~rs address aq:push'
+
+        ## Callback URL for Authentiq. No defaults.
+        ##
+        redirectUri: ''
+
+      github:
+
+        ## GitHub App Client ID. No defaults.
+        ##
+        apiKey: ''
+
+        ## GitHub App Client secret. No defaults.
+        ##
+        appSecret: ''
+
+        ## URL to the GitHub Enterprise server. Defaults to `https://github.com`.
+        ##
+        url: 'https://github.com'
+
+        ## Enable SSL verification while communicating with the GitHub server.
+        ## Defaults to `true`.
+        ##
+        verifySsl: 'true'
+
+      gitlab:
+
+        ## GitLab App Client ID. No defaults.
+        ##
+        apiKey: ''
+
+        ## GitLab App Client secret. No defaults.
+        ##
+        appSecret: ''
+
+      bitbucket:
+
+        ## BitBucket App Client ID. No defaults.
+        ##
+        apiKey: ''
+
+        ## BitBucker App Client secret. No defaults.
+        ##
+        appSecret: ''
+
+      saml:
+
+        ## The URL at which the SAML assertion should be received. When
+        ## `{{ if eq .Values.gitlab.env.https true }}` defaults to `https://{{ .Values.gitlab.env.host }}/users/auth/saml/callback`
+        ## else defaults to `http://{{ .Values.gitlab.env.host }}/users/auth/saml/callback`.
+        ##
+        assertionConsumerServiceUrl: ''
+
+        ## The SHA1 fingerprint of the certificate. No Defaults.
+        ##
+        idpCertFingerprint: ''
+
+        ## The URL to which the authentication request should be sent. No defaults.
+        ##
+        idpSsoTargetUrl: ''
+
+        ## The name of your application. When `{{ eq .Values.gitlab.env.https true }}`
+        ##  defaults to `https://{{ .Values.gitlab.env.host }}` else defaults to
+        ## `http://{{ .Values.gitlab.env.host }}`.
+        ##
+        issuer: ''
+
+        ## The "Sign in with" button label. Defaults to "Our SAML Provider".
+        ##
+        label: 'Our SAML Provider'
+
+        ## Describes the format of the username required by GitLab, Defaults to
+        ## `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`
+        ##
+        nameIdentifierFormat: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+
+        ## Map groups attribute in a SAMLResponse to external groups.
+        ## No defaults.
+        ##
+        groupsAttribute: ''
+
+        ## List of external groups in a SAMLResponse. Value is comma separated
+        ## list of single quoted groups. Example: `'group1','group2'`.
+        ## No defaults.
+        ##
+        externalGroups: ''
+
+        attributeStatements:
+
+          ## Map 'email' attribute name in a SAMLResponse to entries in the OmniAuth
+          ## info hash, No defaults. See [GitLab documentation](http://doc.gitlab.com/ce/integration/saml.html#attribute_statements)
+          ## for more details.
+          ##
+          email: ''
+
+          ## Map 'username' attribute in a SAMLResponse to entries in the OmniAuth
+          ## info hash. No defaults. See [GitLab documentation](http://doc.gitlab.com/ce/integration/saml.html#attribute_statements)
+          ## for more details.
+          ##
+          username: ''
+
+          ## Map 'name' attribute in a SAMLResponse to entries in the OmniAuth info
+          ## hash. No defaults. See [GitLab documentation](http://doc.gitlab.com/ce/integration/saml.html#attribute_statements)
+          ## for more details.
+          ##
+          name: ''
+
+          ## Map 'first_name' attribute in a SAMLResponse to entries in the OmniAuth
+          ## info hash. No defaults. See [GitLab documentation](http://doc.gitlab.com/ce/integration/saml.html#attribute_statements)
+          ## for more details.
+          ##
+          firstName: ''
+
+          ## Map 'last_name' attribute in a SAMLResponse to entries in the OmniAuth
+          ## info hash. No defaults. See [GitLab documentation](http://doc.gitlab.com/ce/integration/saml.html#attribute_statements)
+          ## for more details.
+          ##
+          lastName: ''
+
+      crowd:
+
+        ## Crowd server url. No defaults.
+        ##
+        serverUrl: ''
+
+        app:
+
+          ## Crowd server application name. No defaults.
+          ##
+          name: ''
+
+          ## Crowd server application password. No defaults.
+          ##
+          password: ''
+
+      auth0:
+
+        client:
+
+          ## Auth0 Client ID. No defaults.
+          ##
+          id: ''
+
+          ## Auth0 Client secret. No defaults.
+          ##
+          secret: ''
+
+        ## Auth0 Client ID. No defaults.
+        ##
+        domain: ''
+
+        ## Auth0 Scope. Defaults to `openid profile email`.
+        ##
+        scope: 'openid profile email'
+
+      azure:
+
+        api:
+
+          ## Azure Client ID. No defaults.
+          ##
+          key: ''
+
+          ## Azure Client secret. No defaults.
+          ##
+          secret: ''
+
+        ## Azure Tenant ID. No defaults.
+        ##
+        tenantId: ''
+
+    oauth2:
+
+      generic:
+
+        app:
+
+          ## OAuth2 App ID. No defaults.
+          ##
+          id: ''
+
+          ## OAuth2 App secret. No defaults.
+          ##
+          secret: ''
+
+        client:
+
+          ## The OAuth2 generic client site. No defaults
+          ##
+          site: ''
+
+          ## The OAuth2 generic client user info url. No defaults.
+          ##
+          userInfoUrl: ''
+
+          ## The OAuth2 generic client authorize url. No defaults.
+          ##
+          authorizeUrl: ''
+
+          ## The OAuth2 generic client token url. No defaults.
+          ##
+          tokenUrl: ''
+
+          ## The OAuth2 generic client end session endpoint. No defaults.
+          ##
+          endSessionEndpoint: ''
+
+        ## The OAuth2 generic id path. No defaults.
+        ##
+        idPath: ''
+
+        user:
+
+          ## The OAuth2 generic user id path. No defaults.
+          ##
+          uid: ''
+
+          ## The OAuth2 generic user name. No defaults.
+          ##
+          name: ''
+
+          ## The OAuth2 generic user email. No defaults.
+          ##
+          email: ''
+
+        ## The name of your OAuth2 provider. No defaults.
+        ##
+        name: ''
+
+    gravatar:
+
+      ## Enables gravatar integration. Defaults to `true`.
+      ##
+      enabled: 'true'
+
+      ## Sets a custom gravatar url. Defaults to
+      ## `http://www.gravatar.com/avatar/%{hash}?s=%{size}&d=identicon`. This can
+      ## be used for [Libravatar integration](http://doc.gitlab.com/ce/customization/libravatar.html).
+      httpUrl: 'http://www.gravatar.com/avatar/%{hash}?s=%{size}&d=identicon'
+
+      ## Same as above, but for https. Defaults to `https://secure.gravatar.com/avatar/%{hash}?s=%{size}&d=identicon`.
+      ##
+      httpsUrl: 'https://secure.gravatar.com/avatar/%{hash}?s=%{size}&d=identicon'
+
+    usermap:
+
+      ## Sets the uid for user `git` to the specified uid. Defaults to `1000`.
+      ##
+      uid: '1000'
+
+      ## Sets the gid for group `git` to the specified gid. Defaults to
+      ## `{{ .Values.gitlab.env.usermapUid }}` if defined, else defaults to `1000`.
+      ##
+      gid: '1000'
+
+    ## Google Analytics ID. No defaults.
+    ##
+    googleAnalyticsId: ''
+
+    piwik:
+
+      ## Sets the Piwik URL. No defaults.
+      ##
+      url: ''
+
+      ## Sets the Piwik site ID. No defaults.
+      ##
+      siteId: ''
+
+    awsBackups:
+
+      ## Enables automatic uploads to an Amazon S3 instance. Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## AWS region. No defaults.
+      ##
+      region: ''
+
+      ## AWS endpoint. No defaults.
+      ##
+      endpoint: ''
+
+      ## AWS access key id. No defaults.
+      acesssKeyId: ''
+
+      ## AWS secret access key. No defaults.
+      ##
+      secretAccessKey: ''
+
+      ## AWS bucket for backup uploads. No defaults.
+      ##
+      bucket: ''
+
+      ## Enables mulitpart uploads when file size reaches a defined size. See at
+      ## [AWS S3 Docs](http://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html)
+      ##
+      multipartChunkSize: ''
+
+      ## Turns on AWS Server-Side Encryption. Defaults to `false`. See at
+      ## [AWS S3 Docs](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html)
+      encryption: 'false'
+
+      ## Configure the storage class for the item. Defaults to `STANDARD`.
+      ## See at [AWS S3 Docs](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
+      storageClass: 'STANDARD'
+
+      ## Configure the storage signature version. Defaults to `4`.
+      ## See at [AWS S3 Docs](https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version)
+      ##
+      signatureVersion: '4'
+
+    gcsBackups:
+
+      ## Enables automatic uploads to an Google Cloud Storage (GCS) instance.
+      ## Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## GCS access key id. No defaults.
+      ##
+      accessKeyId: ''
+
+      ## GCS secret access key. No defaults
+      ##
+      secretAccessKey: ''
+
+      ## GCS bucket for backup uploads. No defaults.
+      bucket: ''
+
+    ## Location of custom `robots.txt`. Uses GitLab's default `robots.txt`
+    ## configuration by default. See [www.robotstxt.org](http://www.robotstxt.org)
+    ## for examples.
+    robotsPath: '${USERCONF_TEMPLATES_DIR}/gitlabhq/robots.txt'
+
+    rackAttack:
+
+      ## Enable/disable rack middleware for blocking & throttling abusive
+      ## requests Defaults to `true`.
+      ##
+      enabled: 'true'
+
+      ## Always allow requests from whitelisted host. Defaults to `127.0.0.1`
+      ##
+      whitelist: '127.0.0.1'
+
+      ## Number of failed auth attempts before which an IP should be banned.
+      ## Defaults to `10`
+      maxRetry: '10'
+
+      ## Number of seconds before resetting the per IP auth attempt counter.
+      ## Defaults to `60`.
+      ##
+      findTime: '60'
+
+      ## Number of seconds an IP should be banned after too many auth attempts.
+      ## Defaults to `3600`.
+      ##
+      banTime: '3600'
+
+    ## Timeout for gitlab workhorse http proxy. Defaults to `5m0s`.
+    ##
+    workhorseTimeout: '5m0s'
+
+    sentry:
+
+      ## Enables Error Reporting and Logging with Sentry. Defaults to `false`.
+      ##
+      enabled: 'false'
+
+      ## Sentry DSN. No defaults.
+      ##
+      dsn: ''
+
+      ## Sentry clientside DSN. No defaults.
+      ##
+      clientsideDsn: ''
+
+      ## Sentry environment. Defaults to `production`.
+      ##
+      environment: 'production'

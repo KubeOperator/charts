@@ -1,0 +1,17 @@
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "gitlab.fullname" . }}-redis
+  labels:
+    {{- include "gitlab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: redis
+  selector:
+    {{- include "gitlab.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+{{- end }}

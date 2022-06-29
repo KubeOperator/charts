@@ -1,0 +1,17 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "gitlab.fullname" . }}-postgresql
+  labels:
+    {{- include "gitlab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  ports:
+  - name: postgresql
+    port: {{ .Values.postgresql.port }}
+    targetPort: postgresql
+  selector:
+    {{- include "gitlab.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+{{- end }}

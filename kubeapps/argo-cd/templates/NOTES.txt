@@ -1,13 +1,23 @@
 In order to access the server UI you have the following options:
 
-1. kubectl port-forward service/{{include "argo-cd.fullname" . }}-server -n {{ .Release.Namespace }} 8080:443
-
-    and then open the browser on http://localhost:8080 and accept the certificate
-
-2. enable ingress in the values file `server.ingress.enabled` and either
-      - Add the annotation for ssl passthrough: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/ingress.md#option-1-ssl-passthrough
-      - Add the `--insecure` flag to `server.extraArgs` in the values file and terminate SSL at your ingress: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/ingress.md#option-2-multiple-ingress-objects-and-hosts
-
+{{- if .Values.server.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http://{{ .name }}
+{{- end }}
+{{- else if contains "NodePort" .Values.server.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ template "argo-cd.fullname" . }}-server)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.server.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get svc -w {{ template "argo-cd.fullname" . }}-server'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "argo-cd.fullname" . }}-server -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo http://$SERVICE_IP:{{ .Values.service.externalPort }}
+{{- else if contains "ClusterIP" .Values.server.service.type }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "argo-cd.name" . }},release={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl port-forward $POD_NAME 8080:{{ .Values.service.externalPort }}
+{{- end }}
 
 After reaching the UI the first time you can login with username: admin and the random password generated during the installation. You can find the password by running:
 

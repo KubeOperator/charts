@@ -501,7 +501,7 @@ server:
   service:
     annotations: {}
     labels: {}
-    type: ClusterIP
+    type: NodePort
     ## For node port default ports
     nodePortHttp: 30080
     nodePortHttps: 30443

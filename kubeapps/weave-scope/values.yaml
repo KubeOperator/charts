@@ -18,7 +18,7 @@ global:
     port: 80
     # global.service.type: (required if frontend.enabled == true) the type of the frontend service -- must be ClusterIP, NodePort or LoadBalancer
     # global.service.type is a global to keep it with the other values for configuring the frontend service
-    type: "ClusterIP"
+    type: "NodePort"
   dduportal:
     image:
       repository: registry.kubeoperator.io:8082/dduportal/bats

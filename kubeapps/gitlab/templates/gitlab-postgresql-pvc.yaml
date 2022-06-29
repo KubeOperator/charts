@@ -1,0 +1,13 @@
+{{- if .Values.postgresql.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "gitlab.fullname" . }}-postgresql
+spec:
+  accessModes:
+  - {{ .Values.postgresql.persistence.accessMode }}
+  storageClassName: {{ .Values.postgresql.persistence.storageClassName }}
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.persistence.size }}
+{{- end }}

@@ -154,7 +154,7 @@ proxy:
 service:
   ## @param service.type The way how to expose the service: `Ingress`, `ClusterIP`, `NodePort` or `LoadBalancer`
   ##
-  type: LoadBalancer
+  type: NodePort
   ## TLS parameters
   ##
   tls:
@@ -253,7 +253,7 @@ ingress:
 persistence:
   ## @param persistence.enabled Enable the data persistence or not
   ##
-  enabled: true
+  enabled: false
   ## Resource Policy
   ## @param persistence.resourcePolicy Setting it to `keep` to avoid removing PVCs during a helm delete operation. Leaving it empty will delete PVCs after the chart deleted
   ##
@@ -2877,7 +2877,7 @@ postgresql:
   replication:
     enabled: false
   persistence:
-    enabled: true
+    enabled: false
   ## @param postgresql.initdbScripts [object] Initdb scripts to create Harbor databases
   ##
   initdbScripts:
@@ -2977,13 +2977,13 @@ redis:
   ##
   master:
     persistence:
-      enabled: true
+      enabled: false
   ## Redis&trade; Replica parameters
   ## @param redis.replica.persistence.enabled Enable persistence for replica Redis
   ##
   replica:
     persistence:
-      enabled: true
+      enabled: false
 ## If the Redis&trade; included in the chart is disabled, Harbor will use below
 ## Redis&trade; parameters to connect to an external Redis&trade; server.
 ## Support for both Redis&trade; and Redis+Sentinel&trade;

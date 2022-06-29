@@ -29,7 +29,7 @@ elasticsearch:
   bootstrapChecks: true
 
 service:
-  type: ClusterIP
+  type: NodePort
   externalPort: 9000
   internalPort: 9000
   labels:

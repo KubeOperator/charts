@@ -1,0 +1,965 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "gitlab.fullname" . }}
+  labels:
+    {{- include "gitlab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gitlab
+spec:
+  serviceName: {{ template "gitlab.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "gitlab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gitlab
+  template:
+    metadata:
+      labels:
+        {{- include "gitlab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: gitlab
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.gitlab.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.gitlab.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: gitlab
+          image: {{ .Values.gitlab.image.repository }}:{{ .Values.gitlab.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.gitlab.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: {{ .Values.gitlab.resources.limits.cpu }}
+              memory: {{ .Values.gitlab.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.gitlab.resources.requests.cpu }}
+              memory: {{ .Values.gitlab.resources.requests.memory }}
+          ports:
+            - name: http
+              containerPort: 80
+            - name: ssh
+              containerPort: 22
+          env:
+            - name: DEBUG
+              value: {{ .Values.gitlab.env.debug | quote }}
+
+            - name: GITLAB_HOST
+              value: {{ .Values.gitlab.env.host | quote }}
+            - name: GITLAB_CI_HOST
+              value: {{ .Values.gitlab.env.ciHost | quote }}
+            - name: GITLAB_PORT
+              {{- if ne .Values.gitlab.env.port "" }}
+              value: {{ .Values.gitlab.env.port | quote }}
+              {{- else if .Values.gitlab.env.https }}
+              value: "443"
+              {{- else }}
+              value: "80"
+              {{- end }}
+
+            - name: GITLAB_SECRETS_DB_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: dbKeyBase
+            - name: GITLAB_SECRETS_SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: secretKeyBase
+            - name: GITLAB_SECRETS_OTP_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: otpKeyBase
+
+            - name: TZ
+              value: {{ .Values.gitlab.env.tz | quote }}
+
+            - name: GITLAB_TIMEZONE
+              value: {{ .Values.gitlab.env.timezone | quote }}
+
+            - name: GITLAB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: rootPassword
+
+            - name: GITLAB_ROOT_EMAIL
+              value: {{ .Values.gitlab.env.rootEmail | quote }}
+
+            - name: GITLAB_EMAIL
+              value: {{ .Values.gitlab.env.email.address | quote }}
+            - name: GITLAB_EMAIL_DISPLAY_NAME
+              value: {{ .Values.gitlab.env.email.displayName | quote }}
+            - name: GITLAB_EMAIL_REPLY_TO
+              value: {{ .Values.gitlab.env.email.replyTo | quote }}
+            - name: GITLAB_EMAIL_SUBJECT_SUFFIX
+              value: {{ .Values.gitlab.env.email.subjectSuffix | quote }}
+            - name: GITLAB_EMAIL_ENABLED
+              value: {{ .Values.gitlab.env.email.enabled | quote }}
+            - name: GITLAB_EMAIL_SMIME_ENABLE
+              value: {{ .Values.gitlab.env.email.smime.enable | quote }}
+            - name: GITLAB_EMAIL_SMIME_KEY_FILE
+              value: {{ .Values.gitlab.env.email.smime.keyFile | quote }}
+            - name: GITLAB_EMAIL_SMIME_CERT_FILE
+              value: {{ .Values.gitlab.env.email.smime.certFile | quote }}
+
+            - name: GITLAB_DEFAULT_THEME
+              value: {{ .Values.gitlab.env.defaultTheme | quote }}
+
+            - name: GITLAB_INCOMING_EMAIL_ADDRESS
+              value: {{ .Values.gitlab.env.incomingEmail.address | quote }}
+            - name: GITLAB_INCOMING_EMAIL_ENABLED
+              value: {{ .Values.gitlab.env.incomingEmail.enabled | quote }}
+
+            - name: GITLAB_SIGNUP_ENABLED
+              value: {{ .Values.gitlab.env.signupEnabled | quote }}
+
+            - name: GITLAB_IMPERSONATION_ENABLED
+              value: {{ .Values.gitlab.env.impersonationEnabled | quote }}
+
+            - name: GITLAB_USERNAME_CHANGE
+              value: {{ .Values.gitlab.env.usernameChange | quote }}
+
+            - name: GITLAB_CREATE_GROUP
+              value: {{ .Values.gitlab.env.createGroup | quote }}
+
+            - name: GITLAB_PROJECTS_LIMIT
+              value: {{ .Values.gitlab.env.projects.limit | quote }}
+            - name: GITLAB_PROJECTS_ISSUES
+              value: {{ .Values.gitlab.env.projects.issues | quote }}
+            - name: GITLAB_PROJECTS_MERGE_REQUESTS
+              value: {{ .Values.gitlab.env.projects.mergeRequests | quote }}
+            - name: GITLAB_PROJECTS_WIKI
+              value: {{ .Values.gitlab.env.projects.wiki | quote }}
+            - name: GITLAB_PROJECTS_SNIPPETS
+              value: {{ .Values.gitlab.env.projects.snippets | quote }}
+            - name: GITLAB_PROJECTS_BUILDS
+              value: {{ .Values.gitlab.env.projects.builds | quote }}
+            - name: GITLAB_PROJECTS_CONTAINER_REGISTRY
+              value: {{ .Values.gitlab.env.projects.containerRegsitry | quote }}
+
+            - name: GITLAB_WEBHOOK_TIMEOUT
+              value: {{ .Values.gitlab.env.webhookTimeout | quote }}
+
+            - name: GITLAB_NOTIFY_ON_BROKEN_BUILDS
+              value: {{ .Values.gitlab.env.notifyOnBrokenBuilds | quote }}
+
+            - name: GITLAB_NOTIFY_PUSHER
+              value: {{ .Values.gitlab.env.notifyPusher | quote }}
+
+            - name: GITLAB_REPOS_DIR
+              value: {{ .Values.gitlab.env.reposDir | quote }}
+
+            - name: GITLAB_BACKUP_DIR
+              value: {{ .Values.gitlab.env.backup.dir | quote }}
+            - name: GITLAB_BACKUP_DIR_CHOWN
+              value: {{ .Values.gitlab.env.backup.dirChown | quote }}
+            - name: GITLAB_BACKUP_DIR_GROUP
+              value: {{ .Values.gitlab.env.backup.dirGroup | quote }}
+            - name: GITLAB_BACKUP_SCHEDULE
+              value: {{ .Values.gitlab.env.backup.schedule | quote }}
+            - name: GITLAB_BACKUP_EXPIRY
+              value: {{ .Values.gitlab.env.backup.expiry | quote }}
+            - name: GITLAB_BACKUP_PG_SCHEMA
+              value: {{ .Values.gitlab.env.backup.pgSchema | quote }}
+            - name: GITLAB_BACKUP_ARCHIVE_PERMISSIONS
+              value: {{ .Values.gitlab.env.backup.archivePermissions | quote }}
+            - name: GITLAB_BACKUP_TIME
+              value: {{ .Values.gitlab.env.backup.time | quote }}
+            - name: GITLAB_BACKUP_SKIP
+              value: {{ .Values.gitlab.env.backup.skip | quote }}
+
+            - name: GITLAB_BUILDS_DIR
+              value: {{ .Values.gitlab.env.buildsDir | quote }}
+
+            - name: GITLAB_DOWNLOADS_DIR
+              value: {{ .Values.gitlab.env.downloadsDir | quote }}
+
+            - name: GITLAB_SHARED_DIR
+              value: {{ .Values.gitlab.env.sharedDir | quote }}
+
+            - name: GITLAB_ARTIFACTS_ENABLED
+              value: {{ .Values.gitlab.env.artifacts.enabled | quote }}
+            - name: GITLAB_ARTIFACTS_DIR
+              value: {{ .Values.gitlab.env.artifacts.dir | quote }}
+
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: awsAccessKeyId
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: awsSecretAccessKey
+
+            - name: GITLAB_OBJECT_STORE_CONNECTION_GOOGLE_PROJECT
+              value: {{ .Values.gitlab.env.objectStoreConnection.google.project | quote }}
+            - name: GITLAB_OBJECT_STORE_CONNECTION_GOOGLE_CLIENT_EMAIL
+              value: {{ .Values.gitlab.env.objectStoreConnection.google.clientEmail | quote }}
+            - name: GITLAB_OBJECT_STORE_CONNECTION_GOOGLE_JSON_KEY_LOCATION
+              value: {{ .Values.gitlab.env.objectStoreConnection.google.jsonKeyLocation | quote }}
+            - name: GITLAB_OBJECT_STORE_CONNECTION_PROVIDER
+              value: {{ .Values.gitlab.env.objectStoreConnection.provider | quote }}
+
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_ENABLED
+              value: {{ .Values.gitlab.env.artifactsObjectStore.enabled | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_REMOTE_DIRECTORY
+              value: {{ .Values.gitlab.env.artifactsObjectStore.remoteDirectory | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_DIRECT_UPLOAD
+              value: {{ .Values.gitlab.env.artifactsObjectStore.directUploud | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_BACKGROUND_UPLOAD
+              value: {{ .Values.gitlab.env.artifactsObjectStore.backgroundUpload | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_PROXY_DOWNLOAD
+              value: {{ .Values.gitlab.env.artifactsObjectStore.proxyDownload | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_PROVIDER
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.provider | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: artifactsObjectStoreConnectionAwsAccessKeyId
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: artifactsObjectStoreConnectionAwsSecretAccessKey
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_AWS_REGION
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.aws.region | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_AWS_HOST
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.aws.host | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_AWS_ENDPOINT
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.aws.endpoint | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_AWS_PATH_STYLE
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.aws.pathStyle | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_GOOGLE_PROJECT
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.google.project | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_GOOGLE_CLIENT_EMAIL
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.google.clientEmail | quote }}
+            - name: GITLAB_ARTIFACTS_OBJECT_STORE_CONNECTION_GOOGLE_JSON_KEY_LOCATION
+              value: {{ .Values.gitlab.env.artifactsObjectStore.connection.google.jsonKeyLocation | quote }}
+
+            - name: GITLAB_PIPELINE_SCHEDULE_WORKER_CRON
+              value: {{ .Values.gitlab.env.pipelineScheduleWorkerCron | quote }}
+
+            - name: GITLAB_LFS_ENABLED
+              value: {{ .Values.gitlab.env.lfs.enabled | quote }}
+            - name: GITLAB_LFS_OBJECTS_DIR
+              value: {{ .Values.gitlab.env.lfs.objectDir | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_ENABLED
+              value: {{ .Values.gitlab.env.lfs.store.enabled | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_REMOTE_DIRECTORY
+              value: {{ .Values.gitlab.env.lfs.store.remoteDirectory | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_BACKGROUND_UPLOAD
+              value: {{ .Values.gitlab.env.lfs.store.backgroundUpload | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_PROXY_DOWNLOAD
+              value: {{ .Values.gitlab.env.lfs.store.proxyDownload | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_PROVIDER
+              value: {{ .Values.gitlab.env.lfs.store.connection.provider | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: lfsStoreConnectionAwsAccessKeyId
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: lfsStoreConnectionAwsSecretAccessKey
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_AWS_REGION
+              value: {{ .Values.gitlab.env.lfs.store.connection.aws.region | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_AWS_HOST
+              value: {{ .Values.gitlab.env.lfs.store.connection.aws.host | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_AWS_ENDPOINT
+              value: {{ .Values.gitlab.env.lfs.store.connection.aws.endpoint | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_AWS_PATH_STYLE
+              value: {{ .Values.gitlab.env.lfs.store.connection.aws.pathStyle | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_GOOGLE_PROJECT
+              value: {{ .Values.gitlab.env.lfs.store.connection.google.project | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_GOOGLE_CLIENT_EMAIL
+              value: {{ .Values.gitlab.env.lfs.store.connection.google.clientEmail | quote }}
+            - name: GITLAB_LFS_OBJECT_STORE_CONNECTION_GOOGLE_JSON_KEY_LOCATION
+              value: {{ .Values.gitlab.env.lfs.store.connection.google.jsonKeyLocation | quote }}
+
+            - name: GITLAB_UPLOADS_STORAGE_PATH
+              value: {{ .Values.gitlab.env.uploads.storagePath | quote }}
+            - name: GITLAB_UPLOADS_BASE_DIR
+              value: {{ .Values.gitlab.env.uploads.baseDir | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_ENABLED
+              value: {{ .Values.gitlab.env.uploads.objectStore.enabled | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_REMOTE_DIRECTORY
+              value: {{ .Values.gitlab.env.uploads.objectStore.remoteDirectory | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_BACKGROUND_UPLOAD
+              value: {{ .Values.gitlab.env.uploads.objectStore.backgroundUpload | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_PROXY_DOWNLOAD
+              value: {{ .Values.gitlab.env.uploads.objectStore.proxyDownload | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_PROVIDER
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.provider | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: uploadsObjectStoreConnectionAwsAccessKeyId
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" .  }}
+                  key: uploadsObjectStoreConnectionAwsSecretAccessKey
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_AWS_REGION
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.aws.region | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_AWS_HOST
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.aws.host | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_AWS_ENDPOINT
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.aws.endpoint | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_AWS_PATH_STYLE
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.aws.pathStyle | quote }}
+            - name:  GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_GOOGLE_PROJECT
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.google.project | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_GOOGLE_CLIENT_EMAIL
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.google.clientEmail | quote }}
+            - name: GITLAB_UPLOADS_OBJECT_STORE_CONNECTION_GOOGLE_JSON_KEY_LOCATION
+              value: {{ .Values.gitlab.env.uploads.objectStore.connection.google.jsonKeyLocation | quote }}
+
+            - name: GITLAB_MATTERMOST_ENABLED
+              value: {{ .Values.gitlab.env.mattermost.enabled | quote }}
+            - name: GITLAB_MATTERMOST_URL
+              value: {{ .Values.gitlab.env.mattermost.url | quote }}
+
+            - name: GITLAB_SSH_HOST
+              {{- if .Values.gitlab.env.ssh.host }}
+              value: {{ .Values.gitlab.env.ssh.host | quote }}
+              {{- else }}
+              value: {{ .Values.gitlab.env.host | quote }}
+              {{- end }}
+            - name: GITLAB_SSH_LISTEN_PORT
+              value: {{ .Values.gitlab.env.ssh.listenPort | quote }}
+            - name: GITLAB_SSH_MAXSTARTUPS
+              value: {{ .Values.gitlab.env.ssh.maxstartups | quote }}
+            - name: GITLAB_SSH_PORT
+              {{- if .Values.gitlab.env.ssh.port }}      
+              value: {{ .Values.gitlab.env.ssh.port | quote }}
+              {{- else }}
+              value: {{ .Values.gitlab.env.ssh.listenPort | quote }}
+              {{- end }}
+            - name: GITLAB_RELATIVE_URL_ROOT
+              value: {{ .Values.gitlab.env.relativeUrlRoot | quote }}
+
+            - name: GITLAB_TRUSTED_PROXIES
+              value: {{ .Values.gitlab.env.trustedProxies | quote }}
+
+            - name: GITLAB_REGISTRY_ENABLED
+              value: {{ .Values.gitlab.env.registry.enabled | quote }}
+            - name: GITLAB_REGISTRY_HOST
+              value: {{ .Values.gitlab.env.registry.host | quote }}
+            - name: GITLAB_REGISTRY_PORT
+              value: {{ .Values.gitlab.env.registry.port | quote }}
+            - name: GITLAB_REGISTRY_API_URL
+              value: {{ .Values.gitlab.env.registry.apiUrl | quote }}
+            - name: GITLAB_REGISTRY_KEY_PATH
+              value: {{ .Values.gitlab.env.registry.keyPath | quote }}
+            - name: GITLAB_REGISTRY_DIR
+              value: {{ .Values.gitlab.env.registry.dir | quote }}
+            - name: GITLAB_REGISTRY_ISSUER
+              value: {{ .Values.gitlab.env.registry.issuer | quote }}
+            - name: GITLAB_REGISTRY_GENERATE_INTERNAL_CERTIFICATES
+              value: {{ .Values.gitlab.env.registry.generateInternalCertificates | quote }}
+
+            - name: GITLAB_PAGES_ENABLED
+              value: {{ .Values.gitlab.env.pages.enabled | quote }}
+            - name: GITLAB_PAGES_DOMAIN
+              value: {{ .Values.gitlab.env.pages.domain | quote }}
+            - name: GITLAB_PAGES_DIR
+              value: {{ .Values.gitlab.env.pages.dir | quote }}
+            - name: GITLAB_PAGES_PORT
+              value: {{ .Values.gitlab.env.pages.port | quote }}
+            - name: GITLAB_PAGES_HTTPS
+              value: {{ .Values.gitlab.env.pages.https | quote }}
+            - name: GITLAB_PAGES_ARTIFACTS_SERVER
+              value: {{ .Values.gitlab.env.pages.artifactsServer | quote }}
+            - name: GITLAB_PAGES_EXTERNAL_HTTP
+              value: {{ .Values.gitlab.env.pages.externalHttp | quote }}
+            - name: GITLAB_PAGES_EXTERNAL_HTTPS
+              value: {{ .Values.gitlab.env.pages.externalHttps | quote }}
+            - name: GITLAB_PAGES_ACCESS_CONTROL
+              value: {{ .Values.gitlab.env.pages.accessControl | quote }}
+            - name: GITLAB_PAGES_NGINX_PROXY
+              value: {{ .Values.gitlab.env.pages.nginxProxy | quote }}
+            - name: GITLAB_PAGES_ACCESS_SECRET
+              value: {{ .Values.gitlab.env.pages.access.secret | quote }}
+            - name: GITLAB_PAGES_ACCESS_CONTROL_SERVER
+              value: {{ .Values.gitlab.env.pages.access.controlServer | quote }}
+            - name: GITLAB_PAGES_ACCESS_CLIENT_ID
+              value: {{ .Values.gitlab.env.pages.access.client.id | quote }}
+            - name: GITLAB_PAGES_ACCESS_CLIENT_SECRET
+              value: {{ .Values.gitlab.env.pages.access.client.secret | quote }}
+            - name: GITLAB_PAGES_ACCESS_REDIRECT_URI
+              value: {{ .Values.gitlab.env.pages.access.redirectUri | quote }}
+
+            - name: GITLAB_HTTPS
+              value: {{ .Values.gitlab.env.https | quote }}
+
+            - name: GITALY_CLIENT_PATH
+              value: {{ .Values.gitlab.env.gitaly.clientPath | quote }}
+            - name: GITALY_TOKEN
+              value: {{ .Values.gitlab.env.gitaly.token | quote }}
+
+            - name: GITLAB_MONITORING_UNICORN_SAMPLER_INTERVAL
+              value: {{ .Values.gitlab.env.monitoring.unicornSamplerInterval | quote }}
+            - name: GITLAB_MONITORING_IP_WHITELIST
+              value: {{ .Values.gitlab.env.monitoring.ipWhitelist | quote }}
+            - name: GITLAB_MONITORING_SIDEKIQ_EXPORTER_ENABLED
+              value: {{ .Values.gitlab.env.monitoring.sidekiqExporter.enabled | quote }}
+            - name: GITLAB_MONITORING_SIDEKIQ_EXPORTER_ADDRESS
+              value: {{ .Values.gitlab.env.monitoring.sidekiqExporter.address | quote }}
+            - name: GITLAB_MONITORING_SIDEKIQ_EXPORTER_PORT
+              value: {{ .Values.gitlab.env.monitoring.sidekiqExporter.port | quote }}
+
+            - name: SSL_SELF_SIGNED
+              value: {{ .Values.gitlab.env.ssl.selfSigned | quote }}
+            - name: SSL_CERTIFICATE_PATH
+              value: {{ .Values.gitlab.env.ssl.certificatePath | quote }}
+            - name: SSL_KEY_PATH
+              value: {{ .Values.gitlab.env.ssl.keyPath | quote }}
+            - name: SSL_DHPARAM_PATH
+              value: {{ .Values.gitlab.env.ssl.dhparamPath | quote }}
+            - name: SSL_VERIFY_CLIENT
+              value: {{ .Values.gitlab.env.ssl.verifyClient | quote }}
+            - name: SSL_CA_CERTIFICATES_PATH
+              value: {{ .Values.gitlab.env.ssl.caCertificatesPath | quote }}
+            - name: SSL_REGISTRY_KEY_PATH
+              value: {{ .Values.gitlab.env.ssl.registry.keyPath | quote }}
+            - name: SSL_REGISTRY_CERT_PATH
+              value: {{ .Values.gitlab.env.ssl.registry.certPath | quote }}
+            - name: SSL_PAGES_KEY_PATH
+              value: {{ .Values.gitlab.env.ssl.pages.keyPath | quote }}
+            - name: SSL_PAGES_CERT_PATH
+              value: {{ .Values.gitlab.env.ssl.pages.certPath | quote }}
+            - name: SSL_CIPHERS
+              value: {{ .Values.gitlab.env.ssl.ciphers | quote }}
+
+            - name: NGINX_WORKERS
+              value: {{ .Values.gitlab.env.nginx.workers | quote }}
+            - name: NGINX_SERVER_NAMES_HASH_BUCKET_SIZE
+              value: {{ .Values.gitlab.env.nginx.serverNamesHashBucketSize | quote }}
+            - name: NGINX_HSTS_ENABLED
+              value: {{ .Values.gitlab.env.nginx.hsts.enabled | quote }}
+            - name: NGINX_HSTS_MAXAGE
+              value: {{ .Values.gitlab.env.nginx.hsts.maxage | quote }}
+            - name: NGINX_PROXY_BUFFERING
+              value: {{ .Values.gitlab.env.nginx.proxyBuffering | quote }}
+            - name: NGINX_ACCEL_BUFFERING
+              value: {{ .Values.gitlab.env.nginx.accelBuffering | quote }}
+            - name: NGINX_X_FORWARDED_PROTO
+              value: {{ .Values.gitlab.env.nginx.xForwardingProto | quote }}
+            - name: NGINX_REAL_IP_RECURSIVE
+              value: {{ .Values.gitlab.env.nginx.realIpRecursive | quote }}
+            - name: NGINX_REAL_IP_TRUSTED_ADDRESSES
+              value: {{ .Values.gitlab.env.nginx.realIpTrustedAddresses | quote }}
+
+            - name: REDIS_HOST
+            {{- if .Values.redis.enabled }}
+              value: {{ template "gitlab.fullname" . }}-redis
+            {{- else }}
+              value: {{ .Values.gitlab.env.redis.host | quote }}
+            {{- end }}
+            - name: REDIS_PORT
+              value: {{ .Values.gitlab.env.redis.port | quote }}
+            - name: REDIS_DB_NUMBER
+              value: {{ .Values.gitlab.env.redis.dbNumber | quote }}
+
+            - name: PUMA_WORKERS
+              value: {{ .Values.gitlab.env.puma.workers | quote }}
+            - name: PUMA_TIMEOUT
+              value: {{ .Values.gitlab.env.puma.timeout | quote }}
+            - name: PUMA_THREADS_MIN
+              value: {{ .Values.gitlab.env.puma.threads.min | quote }}
+            - name: PUMA_THREADS_MAX
+              value: {{ .Values.gitlab.env.puma.threads.max | quote }}
+            - name: PUMA_PER_WORKER_MAX_MEMORY_MB
+              value: {{ .Values.gitlab.env.puma.perWorkerMaxMemoryMb | quote }}
+            - name: PUMA_MASTER_MAX_MEMORY_MB
+              value: {{ .Values.gitlab.env.puma.masterMaxMemoryMb | quote }}
+
+            - name: SIDEKIQ_CONCURRENCY
+              value: {{ .Values.gitlab.env.sidekiq.concurrency | quote }}
+            - name: SIDEKIQ_SHUTDOWN_TIMEOUT
+              value: {{ .Values.gitlab.env.sidekiq.shutdownTimeout | quote }}
+            - name: SIDEKIQ_MEMORY_KILLER_MAX_RSS
+              value: {{ .Values.gitlab.env.sidekiq.memoryKillerMaxRss | quote }}
+            - name: GITLAB_SIDEKIQ_LOG_FORMAT
+              value: {{ .Values.gitlab.env.sidekiq.logFormat | quote }}
+
+            - name: DB_ADAPTER
+              value: {{ .Values.gitlab.env.db.adapter | quote }}
+            - name: DB_ENCODING
+              value: {{ .Values.gitlab.env.db.encoding | quote }}
+            - name: DB_HOST
+            {{- if .Values.postgresql.enabled }}
+              value: {{ template "gitlab.fullname" . }}-postgresql
+            {{- else }}
+              value: {{ .Values.gitlab.env.db.host | quote }}
+            {{- end }}
+            - name: DB_NAME
+              value: {{ .Values.gitlab.env.db.name | quote }}
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: dbPassword
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: dbUser
+            - name: DB_PORT
+              value: {{ .Values.gitlab.env.db.port | quote }}
+            - name: DB_POOL
+              value: {{ .Values.gitlab.env.db.pool | quote }}
+            - name: DB_PREPARED_STATEMENTS
+              value: {{ .Values.gitlab.env.db.preparedStatements | quote }}
+
+            - name: SMTP_ENABLED
+              value: {{ .Values.gitlab.env.smtp.enabled | quote }}
+            - name: SMTP_DOMAIN
+              value: {{ .Values.gitlab.env.smtp.domain | quote }}
+            - name: SMTP_HOST
+              value: {{ .Values.gitlab.env.smtp.host | quote }}
+            - name: SMTP_PORT
+              value: {{ .Values.gitlab.env.smtp.port | quote }}
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: smtpUser
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: smtpPassword
+            - name: SMTP_STARTTLS
+              value: {{ .Values.gitlab.env.smtp.startTls | quote }}
+            - name: SMTP_TLS
+              value: {{ .Values.gitlab.env.smtp.tls | quote }}
+            - name: SMTP_OPENSSL_VERIFY_MODE
+              value: {{ .Values.gitlab.env.smtp.openSslVerifyMode | quote }}
+            - name: SMTP_AUTHENTICATION
+              value: {{ .Values.gitlab.env.smtp.authentication | quote }}
+            - name: SMTP_CA_ENABLED
+              value: {{ .Values.gitlab.env.smtp.caEnabled | quote }}
+            - name: SMTP_CA_PATH
+              value: {{ .Values.gitlab.env.smtp.caPath | quote }}
+            - name: SMTP_CA_FILE
+              value: {{ .Values.gitlab.env.smtp.caFile | quote }}
+
+            - name: IMAP_ENABLED
+              value: {{ .Values.gitlab.env.imap.enabled | quote }}
+            - name: IMAP_HOST
+              value: {{ .Values.gitlab.env.imap.host | quote }}
+            - name: IMAP_PORT
+              value: {{ .Values.gitlab.env.imap.port | quote }}
+            - name: IMAP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: imapUser
+            - name: IMAP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: imapPass
+            - name: IMAP_SSL
+              value: {{ .Values.gitlab.env.imap.ssl | quote }}
+            - name: IMAP_STARTTLS
+              value: {{ .Values.gitlab.env.imap.startTls | quote }}
+            - name: IMAP_MAILBOX
+              value: {{ .Values.gitlab.env.imap.mailbox | quote }}
+
+            - name: LDAP_ENABLED
+              value: {{ .Values.gitlab.env.ldap.enabled | quote }}
+            - name: LDAP_LABEL
+              value: {{ .Values.gitlab.env.ldap.label | quote }}
+            - name: LDAP_HOST
+              value: {{ .Values.gitlab.env.ldap.host | quote }}
+            - name: LDAP_PORT
+              value: {{ .Values.gitlab.env.ldap.port | quote }}
+            - name: LDAP_UID
+              value: {{ .Values.gitlab.env.ldap.uid | quote }}
+            - name: LDAP_METHOD
+              value: {{ .Values.gitlab.env.ldap.method | quote }}
+            - name: LDAP_VERIFY_SSL
+              value: {{ .Values.gitlab.env.ldap.verrifySsl | quote }}
+            - name: LDAP_CA_FILE
+              value: {{ .Values.gitlab.env.ldap.caFile | quote }}
+            - name: LDAP_SSL_VERSION
+              value: {{ .Values.gitlab.env.ldap.sslVersion | quote }}
+            - name: LDAP_BIND_DN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: ldapBindDn
+            - name: LDAP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: ldapPass
+            - name: LDAP_TIMEOUT
+              value: {{ .Values.gitlab.env.ldap.timeout | quote }}
+            - name: LDAP_ACTIVE_DIRECTORY
+              value: {{ .Values.gitlab.env.ldap.activeDirectory | quote }}
+            - name: LDAP_ALLOW_USERNAME_OR_EMAIL_LOGIN
+              value: {{ .Values.gitlab.env.ldap.allowUsernameOrEmailLogin | quote }}
+            - name: LDAP_BLOCK_AUTO_CREATED_USERS
+              value: {{ .Values.gitlab.env.ldap.blockAutoCreatedUsers | quote }}
+            - name: LDAP_BASE
+              value: {{ .Values.gitlab.env.ldap.base | quote }}
+            - name: LDAP_USER_FILTER
+              value: {{ .Values.gitlab.env.ldap.user.filter | quote }}
+            - name: LDAP_USER_ATTRIBUTE_USERNAME
+              value: {{ .Values.gitlab.env.ldap.user.attribute.username | quote }}
+            - name: LDAP_USER_ATTRIBUTE_MAIL
+              value: {{ .Values.gitlab.env.ldap.user.attribute.mail | quote }}
+            - name: LDAP_USER_ATTRIBUTE_NAME
+              value: {{ .Values.gitlab.env.ldap.user.attribute.name | quote }}
+            - name: LDAP_USER_ATTRIBUTE_FIRSTNAME
+              value: {{ .Values.gitlab.env.ldap.user.attribute.firstname | quote }}
+            - name: LDAP_USER_ATTRIBUTE_LASTNAME
+              value: {{ .Values.gitlab.env.ldap.user.attribute.lastname | quote }}
+            - name: LDAP_LOWERCASE_USERNAMES
+              value: {{ .Values.gitlab.env.ldap.lowercaseUsernames | quote }}
+
+            - name: OAUTH_ENABLED
+              value: {{ .Values.gitlab.env.oauth.enabled | quote }}
+            - name: OAUTH_AUTO_SIGN_IN_WITH_PROVIDER
+              value: {{ .Values.gitlab.env.oauth.autoSignInWithProvider | quote }}
+            - name: OAUTH_ALLOW_SSO
+              value: {{ .Values.gitlab.env.oauth.allowSSO | quote }}
+            - name: OAUTH_BLOCK_AUTO_CREATED_USERS
+              value: {{ .Values.gitlab.env.oauth.blockAutoCreatedUsers | quote }}
+            - name: OAUTH_AUTO_LINK_LDAP_USER
+              value: {{ .Values.gitlab.env.oauth.autoLinkLdapUser | quote }}
+            - name: OAUTH_AUTO_LINK_SAML_USER
+              value: {{ .Values.gitlab.env.oauth.autoLinkSamlUser | quote }}
+            - name: OAUTH_EXTERNAL_PROVIDERS
+              value: {{ .Values.gitlab.env.oauth.externalProviders | quote }}
+            - name: OAUTH_CAS3_LABEL
+              value: {{ .Values.gitlab.env.oauth.cas3.label | quote }}
+            - name: OAUTH_CAS3_SERVER
+              value: {{ .Values.gitlab.env.oauth.cas3.server | quote }}
+            - name: OAUTH_CAS3_DISABLE_SSL_VERIFICATION
+              value: {{ .Values.gitlab.env.oauth.cas3.disableSslVerification | quote }}
+            - name: OAUTH_CAS3_LOGIN_URL
+              value: {{ .Values.gitlab.env.oauth.cas3.loginUrl | quote }}
+            - name: OAUTH_CAS3_VALIDATE_URL
+              value: {{ .Values.gitlab.env.oauth.cas3.validateUrL | quote }}
+            - name: OAUTH_CAS3_LOGOUT_URL
+              value: {{ .Values.gitlab.env.oauth.cas3.logoutUrl | quote }}
+            - name: OAUTH_GOOGLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthGoogleApiKey
+            - name: OAUTH_GOOGLE_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthGoogleAppSecret
+            - name: OAUTH_GOOGLE_RESTRICT_DOMAIN
+              value: {{ .Values.gitlab.env.oauth.google.restrictDomain | quote }}
+            - name: OAUTH_FACEBOOK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthFacebookApiKey
+            - name: OAUTH_FACEBOOK_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthFacebookAppSecret
+            - name: OAUTH_TWITTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthTwitterApiKey
+            - name: OAUTH_TWITTER_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthTwitterAppSecret
+            - name: OAUTH_AUTHENTIQ_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAuthentiqClientId
+            - name: OAUTH_AUTHENTIQ_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAuthentiqClientSecret
+            - name: OAUTH_AUTHENTIQ_SCOPE
+              value: {{ .Values.gitlab.env.oauth.authentiq.scope | quote }}
+            - name: OAUTH_AUTHENTIQ_REDIRECT_URI
+              value: {{ .Values.gitlab.env.oauth.authentiq.redirectUri | quote }}
+            - name: OAUTH_GITHUB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthGithubApiKey
+            - name: OAUTH_GITHUB_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthGithubAppSecret
+            - name: OAUTH_GITHUB_URL
+              value: {{ .Values.gitlab.env.oauth.github.url | quote }}
+            - name: OAUTH_GITHUB_VERIFY_SSL
+              value: {{ .Values.gitlab.env.oauth.github.verifySsl | quote }}
+            - name: OAUTH_GITLAB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthGitlabApiKey
+            - name: OAUTH_GITLAB_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthGitlabAppSecret
+            - name: OAUTH_BITBUCKET_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthBitbucketApiKey
+            - name: OAUTH_BITBUCKET_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthBitbucketAppSecret
+            - name: OAUTH_SAML_ASSERTION_CONSUMER_SERVICE_URL
+              value: {{ .Values.gitlab.env.oauth.saml.assertionConsumerServiceUrl | quote }}
+            - name: OAUTH_SAML_IDP_CERT_FINGERPRINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthSamlIdpCertFingerprint
+            - name: OAUTH_SAML_IDP_SSO_TARGET_URL
+              value: {{ .Values.gitlab.env.oauth.saml.idpSsoTargetUrl | quote }}
+            - name: OAUTH_SAML_ISSUER
+              value: {{ .Values.gitlab.env.oauth.saml.issuer | quote }}
+            - name: OAUTH_SAML_LABEL
+              value: {{ .Values.gitlab.env.oauth.saml.label | quote }}
+            - name: OAUTH_SAML_NAME_IDENTIFIER_FORMAT
+              value: {{ .Values.gitlab.env.oauth.saml.nameIdentifierFormat | quote }}
+            - name: OAUTH_SAML_GROUPS_ATTRIBUTE
+              value: {{ .Values.gitlab.env.oauth.saml.groupsAttribute | quote }}
+            - name: OAUTH_SAML_EXTERNAL_GROUPS
+              value: {{ .Values.gitlab.env.oauth.saml.externalGroups | quote }}
+            - name: OAUTH_SAML_ATTRIBUTE_STATEMENTS_EMAIL
+              value: {{ .Values.gitlab.env.oauth.saml.attributeStatements.email | quote }}
+            - name: OAUTH_SAML_ATTRIBUTE_STATEMENTS_USERNAME
+              value: {{ .Values.gitlab.env.oauth.saml.attributeStatements.username | quote }}
+            - name: OAUTH_SAML_ATTRIBUTE_STATEMENTS_NAME
+              value: {{ .Values.gitlab.env.oauth.saml.attributeStatements.name | quote }}
+            - name: OAUTH_SAML_ATTRIBUTE_STATEMENTS_FIRST_NAME
+              value: {{ .Values.gitlab.env.oauth.saml.attributeStatements.firstName | quote }}
+            - name: OAUTH_SAML_ATTRIBUTE_STATEMENTS_LAST_NAME
+              value: {{ .Values.gitlab.env.oauth.saml.attributeStatements.lastName | quote }}
+            - name: OAUTH_CROWD_SERVER_URL
+              value: {{ .Values.gitlab.env.oauth.crowd.serverUrl | quote }}
+            - name: OAUTH_CROWD_APP_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthCrowdAppName
+            - name: OAUTH_CROWD_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthCrowdAppPassword
+            - name: OAUTH_AUTH0_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAuth0ClientId
+            - name: OAUTH_AUTH0_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAuth0ClientSecret
+            - name: OAUTH_AUTH0_DOMAIN
+              value: {{ .Values.gitlab.env.oauth.auth0.domain | quote }}
+            - name: OAUTH_AUTH0_SCOPE
+              value: {{ .Values.gitlab.env.oauth.auth0.scope | quote }}
+            - name: OAUTH_AZURE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAzureApiKey
+            - name: OAUTH_AZURE_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAzureApiSecret
+            - name: OAUTH_AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauthAzureTenantId
+            - name: OAUTH2_GENERIC_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauth2GenericAppId
+            - name: OAUTH2_GENERIC_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: oauth2GenericAppSecret
+            - name: OAUTH2_GENERIC_CLIENT_SITE
+              value: {{ .Values.gitlab.env.oauth2.generic.client.site | quote }}
+            - name: OAUTH2_GENERIC_CLIENT_USER_INFO_URL
+              value: {{ .Values.gitlab.env.oauth2.generic.client.userInfoUrl | quote }}
+            - name: OAUTH2_GENERIC_CLIENT_AUTHORIZE_URL
+              value: {{ .Values.gitlab.env.oauth2.generic.client.authorizeUrl | quote }}
+            - name: OAUTH2_GENERIC_CLIENT_TOKEN_URL
+              value: {{ .Values.gitlab.env.oauth2.generic.client.tokenUrl | quote }}
+            - name: OAUTH2_GENERIC_CLIENT_END_SESSION_ENDPOINT
+              value: {{ .Values.gitlab.env.oauth2.generic.client.endSessionEndpoint | quote }}
+            - name: OAUTH2_GENERIC_ID_PATH
+              value: {{ .Values.gitlab.env.oauth2.generic.idPath | quote }}
+            - name: OAUTH2_GENERIC_USER_UID
+              value: {{ .Values.gitlab.env.oauth2.generic.user.uid | quote }}
+            - name: OAUTH2_GENERIC_USER_NAME
+              value: {{ .Values.gitlab.env.oauth2.generic.user.name | quote }}
+            - name: OAUTH2_GENERIC_USER_EMAIL
+              value: {{ .Values.gitlab.env.oauth2.generic.user.email | quote }}
+            - name: OAUTH2_GENERIC_NAME
+              value: {{ .Values.gitlab.env.oauth2.generic.name | quote }}
+
+            - name: GITLAB_GRAVATAR_ENABLED
+              value: {{ .Values.gitlab.env.gravatar.enabled | quote }}
+            - name: GITLAB_GRAVATAR_HTTP_URL
+              value: {{ .Values.gitlab.env.gravatar.httpUrl | quote }}
+            - name: GITLAB_GRAVATAR_HTTPS_URL
+              value: {{ .Values.gitlab.env.gravatar.httpsUrl | quote }}
+
+            - name: USERMAP_UID
+              value: {{ .Values.gitlab.env.usermap.uid | quote }}
+            - name: USERMAP_GID
+              value: {{ .Values.gitlab.env.usermap.gid | quote }}
+
+            - name: GOOGLE_ANALYTICS_ID
+              value: {{ .Values.gitlab.env.googleAnalyticsId | quote }}
+
+            - name: PIWIK_URL
+              value: {{ .Values.gitlab.env.piwik.url | quote }}
+            - name: PIWIK_SITE_ID
+              value: {{ .Values.gitlab.env.piwik.siteId | quote }}
+
+            - name: AWS_BACKUPS
+              value: {{ .Values.gitlab.env.awsBackups.enabled | quote }}
+            - name: AWS_BACKUP_REGION
+              value: {{ .Values.gitlab.env.awsBackups.region | quote }}
+            - name: AWS_BACKUP_ENDPOINT
+              value: {{ .Values.gitlab.env.awsBackups.endpoint | quote }}
+            - name: AWS_BACKUP_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: awsBackupsAcesssKeyId
+            - name: AWS_BACKUP_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: awsBackupsSecretAccessKey
+            - name: AWS_BACKUP_BUCKET
+              value: {{ .Values.gitlab.env.awsBackups.bucket | quote }}
+            - name: AWS_BACKUP_MULTIPART_CHUNK_SIZE
+              value: {{ .Values.gitlab.env.awsBackups.multipartChunkSize | quote }}
+            - name: AWS_BACKUP_ENCRYPTION
+              value: {{ .Values.gitlab.env.awsBackups.encryption | quote }}
+            - name: AWS_BACKUP_STORAGE_CLASS
+              value: {{ .Values.gitlab.env.awsBackups.storageClass | quote }}
+            - name: AWS_BACKUP_SIGNATURE_VERSION
+              value: {{ .Values.gitlab.env.awsBackups.signatureVersion | quote }}
+
+            - name: GCS_BACKUPS
+              value: {{ .Values.gitlab.env.gcsBackups.enabled | quote }}
+            - name: GCS_BACKUP_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: gcsBackupsAccessKeyId
+            - name: GCS_BACKUP_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gitlab.fullname" . }}
+                  key: gcsBackupsSecretAccessKey
+            - name: GCS_BACKUP_BUCKET
+              value: {{ .Values.gitlab.env.gcsBackups.bucket | quote }}
+
+            - name: GITLAB_ROBOTS_PATH
+              value: {{ .Values.gitlab.env.robotsPath | quote }}
+
+            - name: RACK_ATTACK_ENABLED
+              value: {{ .Values.gitlab.env.rackAttack.enabled | quote }}
+            - name: RACK_ATTACK_WHITELIST
+              value: {{ .Values.gitlab.env.rackAttack.whitelist | quote }}
+            - name: RACK_ATTACK_MAXRETRY
+              value: {{ .Values.gitlab.env.rackAttack.maxRetry | quote }}
+            - name: RACK_ATTACK_FINDTIME
+              value: {{ .Values.gitlab.env.rackAttack.findTime | quote }}
+            - name: RACK_ATTACK_BANTIME
+              value: {{ .Values.gitlab.env.rackAttack.banTime | quote }}
+
+            - name: GITLAB_WORKHORSE_TIMEOUT
+              value: {{ .Values.gitlab.env.workhorseTimeout | quote }}
+
+            - name: SENTRY_ENABLED
+              value: {{ .Values.gitlab.env.sentry.enabled | quote }}
+            - name: SENTRY_DSN
+              value: {{ .Values.gitlab.env.sentry.dsn | quote }}
+            - name: SENTRY_CLIENTSIDE_DSN
+              value: {{ .Values.gitlab.env.sentry.clientsideDsn | quote }}
+            - name: SENTRY_ENVIRONMENT
+              value: {{ .Values.gitlab.env.sentry.environment | quote }}
+          volumeMounts:
+            - mountPath: /home/git/data
+              name: gitlab-data
+          {{- with .Values.gitlab.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.gitlab.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+         {{- end }}
+          resources:
+            {{- toYaml .Values.gitlab.resources | nindent 12 }}
+      {{- with .Values.gitlab.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gitlab.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gitlab.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: gitlab-data
+        {{- if .Values.gitlab.persistence.data.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "gitlab.fullname" .  }}-data
+        {{- else }}
+          emptyDir: {}
+        {{- end }}

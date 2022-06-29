@@ -1,0 +1,52 @@
+{{- if and .Values.gitlab.ingress.enabled -}}
+{{- $kubeVersion := .Capabilities.KubeVersion.GitVersion   -}}
+{{- if semverCompare ">=1.14-0" $kubeVersion -}}
+{{- $fullName := include "gitlab.fullname" . -}}
+{{- if semverCompare ">=1.19-0" $kubeVersion -}}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "gitlab.labels" . | nindent 4 }}
+  {{- with .Values.gitlab.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.gitlab.ingress.tls }}
+  tls:
+  {{- range .Values.gitlab.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+{{- end }}
+  rules:
+  {{- range .Values.gitlab.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+        {{- range .paths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              {{- if semverCompare ">=1.19-0" $kubeVersion }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  name: http
+              {{- else if semverCompare ">=1.14-0" $kubeVersion }}
+              backend:
+                serviceName: {{ $fullName }}
+                servicePort: http
+              {{- end }}
+        {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -173,7 +173,7 @@ readinessProbe:
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
-  enabled: true
+  enabled: false
   ## A manually manage Persistent Volume Claim
   ## Requires persistence.enable: true
   ## If defined, PVC must be created manually before volume will be bound
@@ -231,7 +231,7 @@ mariadb:
   ##
   master:
     persistence:
-      enabled: true
+      enabled: false
       ## mariadb data Persistent Volume Storage Class
       ## If defined, storageClassName: <storageClass>
       ## If set to "-", storageClassName: "", which disables dynamic provisioning
@@ -264,7 +264,7 @@ postgresql:
   ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
   ##
   persistence:
-    enabled: true
+    enabled: false
     ## A manually manage Persistent Volume Claim
     ## Requires postgresql.persistence.enable: true
     ## If defined, PVC must be created manually before volume will be bound
@@ -306,7 +306,7 @@ externalDatabase:
 ##   elsewhere: LoadBalancer
 ##
 service:
-  type: LoadBalancer
+  type: NodePort
   # HTTP Port
   port: 80
   ## loadBalancerIP:

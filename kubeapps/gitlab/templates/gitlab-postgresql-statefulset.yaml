@@ -1,0 +1,84 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "gitlab.fullname" . }}-postgresql
+  labels:
+    {{- include "gitlab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  serviceName: {{ template "gitlab.fullname" . }}-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "gitlab.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
+  template:
+    metadata:
+      labels:
+        {{- include "gitlab.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.postgresql.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: postgresql
+        image: {{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
+        imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
+        ports:
+        - name: postgresql
+          containerPort: 5432
+        env:
+        - name: DB_EXTENSION
+          value: {{ .Values.postgresql.db.extension | quote }}
+        - name: DB_NAME
+          value: {{ .Values.postgresql.db.name | quote }}
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "gitlab.fullname" . }}
+              key: dbPassword
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "gitlab.fullname" . }}
+              key: dbUser
+        volumeMounts:
+        - mountPath: /var/lib/postgresql
+          name: gitlab-postgresql
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -h
+            - localhost
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -h
+            - localhost
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+      restartPolicy: Always
+      volumes:
+      - name: gitlab-postgresql
+      {{- if .Values.postgresql.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ template "gitlab.fullname" . }}-postgresql
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+{{- end }}

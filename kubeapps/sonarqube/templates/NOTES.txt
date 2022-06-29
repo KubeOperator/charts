@@ -1,6 +1,5 @@
 This chart has been deprecated and moved to https://github.com/oteemo/charts
 
-
 1. Get the application URL by running these commands:
 {{- if .Values.ingress.enabled }}
 {{- range .Values.ingress.hosts }}
@@ -20,3 +19,5 @@ This chart has been deprecated and moved to https://github.com/oteemo/charts
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl port-forward $POD_NAME 8080:{{ .Values.service.externalPort }}
 {{- end }}
+
+After reaching the UI the first time you can login with default login account password: admin/admin
