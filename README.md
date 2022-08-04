@@ -1,22 +1,9 @@
-# KubeOperator 3.0 Helm Charts
+# KubeOperator Chart 仓库
 
-KubeOperator 3.0 提供的工具类应用包括：
+[KubeOperator](https://github.com/KubeOperator/KubeOperator) 是一个开源的轻量级 Kubernetes 发行版，专注于帮助企业规划、部署和运营生产级别的 K8s 集群。
 
-- chartmuseum
-- docker-registry
-- efk
-- kubeapps
-- kubernetes-dashboard
-- prometheus
+该项目用于部署 [KubeOperator](https://github.com/KubeOperator/KubeOperator) 的 Helm Chart。
 
-其中 KubeApps 中官方维护的应用列表包括：
+## 问题反馈
 
-|应用名称|应用描述| Chart Version| App Version|
-|--------------- | :-----------:  | :-----------: |:-----------: |
-| Harbor | 镜像仓库 | 5.0.8 | 1.10.2 |
-| Jenkins | 制品库 | 5.0.6 | 2.222.1 |
-| GitLab | 代码管理 |  0.2.2|  9.4.1 |
-| Argo CD | 持续部署 |  2.5.0|  1.6.1 |
-| Sonarqube | 代码质量检测 | 4.0.1 | 7.9.2 |
-
-
+如果您在使用过程中遇到什么问题，或有进一步的需求需要反馈，请提交 GitHub Issue 到 [KubeOperator 项目的主仓库](https://github.com/KubeOperator/KubeOperator/issues)
