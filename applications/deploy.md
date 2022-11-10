@@ -172,3 +172,11 @@ $ helm install gatekeeper --namespace kube-operator \
 --set image.crdRepository=172.16.10.181:8082/openpolicyagent/gatekeeper-crds \
 --set image.release=v3.7.0 \
 applications/gatekeeper
+
+### metallb
+$ helm install metallb --namespace kube-operator \
+--set controller.image.repository=172.16.10.181:8082/metallb/controller \
+--set controller.image.tag=v0.13.7 \
+--set speaker.image.repository=172.16.10.181:8082/metallb/speaker \
+--set speaker.image.tag=v0.13.7 \
+applications/metallb
